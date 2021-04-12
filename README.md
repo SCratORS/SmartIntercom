@@ -1,8 +1,6 @@
 # SmartIntercom
-![main](images/front.jpg)
 
-Вид сзади
-![back](images/back.jpg)
+![main](images/front.jpg)
 
 Умный домофон на ESP
 Устройство поддерживает передачу аудио потока на блок вызова. Перед использованием необходимо записать аудио файлы из папка data в LittleFS.
