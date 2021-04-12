@@ -1,0 +1,328 @@
+substitutions:
+  dev_name: smartintercom_e8db849c6ee5
+  
+#input_select_mode_value
+  input_select_disable: "Не активен"
+  input_select_no_answer: "Сброс вызова если нет ответа" 
+  input_select_reject: "Сброс вызова" 
+  
+#line_status_text
+  line_status_call:   "Вызов"
+  line_status_answer: "Ответ"
+  line_status_open:   "Открытие двери"
+  line_status_reject: "Сброс вызова"
+  line_status_close:  "Закрыто"
+  
+#delay
+  call_end_detect_delay: 3000ms     # Interval between rings to detect incoming call
+  delay_before_switch_line: 1000ms  # Delay before switch line (answer activate)
+  delay_before_voice: 1000ms         # Delay before play voice
+  delay_before_open_door: 100ms    # Delay before open door
+  delay_open_on_time: 600ms         # How long the "open door button" will be pressed
+  delay_after_close_door: 2000ms    # Delay after close door
+  delay_no_answer: 30s              # Delay if no answer
+  
+esphome:
+  name: ${dev_name}
+  platform: ESP8266
+  board: esp12e
+  libraries:
+    - SPI
+    - ESP8266SdFat
+    - SDFS
+    - SD(esp8266)
+    - ESP8266HTTPClient
+    - ESP8266Audio
+  includes:
+    - lib/ESPAudio.h
+  platformio_options:
+      board_build.f_cpu: 160000000L
+      board_build.filesystem: littlefs
+      board_build.ldscript: eagle.flash.4m3m.ld
+      build_flags: -D PIO_FRAMEWORK_ARDUINO_LWIP2_HIGHER_BANDWIDTH
+    
+wifi:
+  ssid: !secret ssid
+  password: !secret passwd
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: ${dev_name}
+    password: "12345678"
+
+captive_portal:
+
+# Enable logging
+logger:
+  level: DEBUG
+  esp8266_store_log_strings_in_flash: False
+
+globals:
+  - id: current_mode
+    type: int
+    restore_value: yes
+    initial_value: '0'
+  - id: status_line
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+# Enable Home Assistant API
+api:
+  password: "12345678"
+
+ota:
+  password: "12345678"
+
+status_led:
+  pin:
+    number: GPIO2
+    inverted: True
+
+custom_component:
+  - id: audio_player
+    lambda: 'return {new ESPAudio()};'
+
+script:
+  # Accept incoming call
+  - id: accept
+    then:
+      - if:
+          condition:
+            lambda: 'return id(status_line) == true;'
+          then:
+            - delay: $delay_before_switch_line
+            - output.turn_on: relay_switch_line
+            - lambda: 'id(line_status).publish_state("${line_status_answer}");'
+            - delay: $delay_before_voice
+            - lambda: 'playFile(audio_player, "/user_access_allowed.wav");'
+            - wait_until:
+                lambda: 'return !isPlaying(audio_player);'
+            - delay: $delay_before_open_door
+            - output.turn_on: indicator
+            - output.turn_on: open_door
+            - lambda: 'id(line_status).publish_state("${line_status_open}");'
+            - delay: $delay_open_on_time
+            - output.turn_off: open_door
+            - lambda: 'id(line_status).publish_state("${line_status_reject}");'
+            - delay: $delay_after_close_door
+            - output.turn_off: indicator
+            - output.turn_off: relay_switch_line
+            - lambda: 'id(line_status).publish_state("${line_status_close}");'
+            - if:
+                condition:
+                  switch.is_on: accept_call
+                then:
+                  switch.turn_off: accept_call
+
+  # Reject incoming call
+  - id: reject
+    then:
+      - if:
+          condition:
+            lambda: 'return id(status_line) == true;'
+          then:
+            - delay: $delay_before_switch_line
+            - output.turn_on: relay_switch_line
+            - lambda: 'id(line_status).publish_state("${line_status_answer}");'
+            - delay: $delay_before_voice
+            - if:
+                condition:
+                  lambda: 'return id(current_mode) == 2;'
+                then:
+                  - lambda: 'playFile(audio_player, "/access_denied.wav");'
+                  - wait_until:
+                      lambda: 'return !isPlaying(audio_player);'
+                else:
+                  - if:
+                      condition:
+                        switch.is_on: reject_call
+                      then:
+                        - lambda: 'playFile(audio_player, "/user_no_connect.wav");'
+                        - wait_until:
+                            lambda: 'return !isPlaying(audio_player);'
+                      else:
+                        - lambda: 'playFile(audio_player, "/user_no_answer.wav");'
+                        - wait_until:
+                            lambda: 'return !isPlaying(audio_player);'
+            - delay: $delay_open_on_time
+            - lambda: 'id(line_status).publish_state("${line_status_reject}");'
+            - output.turn_off: relay_switch_line
+            - lambda: 'id(line_status).publish_state("${line_status_close}");'
+            - delay: $delay_after_close_door
+            - if:
+                condition:
+                  switch.is_on: reject_call
+                then:
+                  switch.turn_off: reject_call
+
+  # Reject no answer
+  - id: reject_no_answer
+    then:
+      - if:
+          condition:
+            lambda: 'return id(status_line) == true;'
+          then:
+            - delay: $delay_no_answer
+            - script.execute: reject
+
+  - id: state_call
+    then:
+      if:
+        condition:
+          switch.is_on: accept_call
+        then:
+          script.execute: accept
+        else:
+          if:
+            condition:
+              switch.is_on: reject_call
+            then:
+              script.execute: reject
+            else:
+              if:
+                condition:
+                  lambda: 'return id(current_mode) == 3;'
+                then:
+                  script.execute: accept
+                else:
+                  if:
+                    condition:
+                      lambda: 'return id(current_mode) == 2;'
+                    then:
+                      script.execute: reject
+                    else:
+                      if:
+                        condition:
+                          lambda: 'return id(current_mode) == 1;'
+                        then:
+                          script.execute: reject_no_answer
+                        else:
+                          - lambda: 'id(line_status).publish_state("${line_status_close}");'
+
+text_sensor:
+  - platform: homeassistant
+    entity_id: input_select.${dev_name}_modes
+    id: mode_select
+    on_value:
+      lambda: |-
+          if (id(mode_select).state == "${input_select_disable}") {
+            id(current_mode) = 0;
+          } else if (id(mode_select).state == "${input_select_no_answer}") {
+            id(current_mode) = 1;
+          } else if (id(mode_select).state == "${input_select_reject}") {
+            id(current_mode) = 2;
+          } else {
+            id(current_mode) = 3;
+          }
+  - platform: template
+    id: line_status
+    icon: "mdi:bell"
+    name: ${dev_name}_line_status
+    lambda: 'return {"${line_status_close}"};'
+  - platform: wifi_info
+    ip_address:
+      name: ${dev_name}_ip
+      icon: "mdi:lan"
+    ssid:
+      name: ${dev_name}_ssid
+      icon: "mdi:wifi"
+    mac_address:
+      name: ${dev_name}_mac
+      icon: "mdi:lan"
+
+binary_sensor:
+  - platform: gpio
+    id: line_detect
+    name: ${dev_name}_line_detect
+    pin:
+      number: 12
+      mode: INPUT_PULLUP
+      inverted: True
+    filters:
+      delayed_off: $call_end_detect_delay
+    on_press:
+      - lambda: 'id(status_line) = true;'
+      - logger.log: "CALL TRUE"
+      - script.execute: state_call
+    on_release:
+      - lambda: 'id(status_line) = false;'
+      - logger.log: "CALL FALSE"
+    on_state:
+      lambda: |-
+        if (x) {
+          id(line_status).publish_state("${line_status_call}");
+        } else {
+          id(line_status).publish_state("${line_status_close}");
+        }   
+  - platform: gpio
+    pin:
+      number: 0
+      mode: INPUT_PULLUP
+      inverted: True
+    id: hw_button
+    on_press:
+      - then:
+          - switch.turn_on: accept_call
+          - script.execute: state_call
+    
+output:
+  - platform: gpio
+    id: relay_switch_line
+    pin:
+      number: 14
+      mode: OUTPUT
+  - platform: gpio
+    id: open_door
+    pin:
+      number: 5
+      mode: OUTPUT
+  - platform: gpio
+    id: indicator
+    pin:
+      number: 13
+      mode: OUTPUT
+
+switch:
+  - platform: template
+    name: ${dev_name}_accept_call
+    id: accept_call
+    icon: "mdi:door-open"
+    turn_on_action:
+      - switch.template.publish:
+          id: accept_call
+          state: true
+      - switch.turn_off: reject_call
+      - logger.log: "ACCEPT_CLICK"
+      - if:
+          condition:
+            lambda: 'return id(status_line) == true;'
+          then:
+            - logger.log: "ACCEPT_SCRIPT"
+            - script.execute: state_call
+          else:
+            - logger.log: "CALL IS NOT DETECT"
+          
+    turn_off_action:
+      - switch.template.publish:
+          id: accept_call
+          state: false    
+    
+  - platform: template
+    name: ${dev_name}_reject_call
+    id: reject_call
+    icon: "mdi:phone-hangup"
+    turn_on_action:
+      - switch.template.publish:
+          id: reject_call
+          state: true
+      - switch.turn_off: accept_call
+      - if:
+          condition:
+            lambda: 'return id(status_line) == true;'
+          then:
+            - script.execute: state_call
+    turn_off_action:
+      - switch.template.publish:
+          id: reject_call
+          state: false
