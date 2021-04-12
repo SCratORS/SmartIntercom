@@ -1,0 +1,14 @@
+type: entities
+entities:
+  - entity: sensor.smartintercom_e8db849c6ee5_line_status
+    name: Домофон
+    secondary_info: last-changed
+  - entity: input_select.smartintercom_e8db849c6ee5_modes
+  - type: buttons
+    entities:
+      - entity: switch.smartintercom_e8db849c6ee5_accept_call
+        name: Открыть дверь
+      - entity: switch.smartintercom_e8db849c6ee5_reject_call
+        name: Сбросить вызов
+show_header_toggle: false
+state_color: false
