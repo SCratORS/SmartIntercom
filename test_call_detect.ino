@@ -5,11 +5,11 @@
 #include "AudioGeneratorMP3.h"  
 #include <Arduino.h>
 #define LINE_SWITCH_PIN   14   //LINE SWITCH
-#define DETECT_CALL_PIN   12    //GPIO0 Detect call
-#define OPEN_DOOR_PIN     5   //TX GPIO1 Open the door
+#define DETECT_CALL_PIN   12   //GPIO Detect call
+#define OPEN_DOOR_PIN     5    //GPIO Open the door
 void ICACHE_RAM_ATTR callDetector();
-const char* ssid = "127.0.2.4";
-const char* password =  "give me wi-fi";
+const char* ssid = "YOUR SSID";
+const char* password =  "YOUR PASSWORD";
 
 int delaySWUP                     = 1000; 
 int delayVOICE                    = 1000;
