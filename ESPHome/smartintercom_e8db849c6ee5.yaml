@@ -89,7 +89,7 @@ script:
     then:
       - if:
           condition:
-            lambda: 'return id(status_line) == true;'
+            lambda: 'return id(status_line);'
           then:
             - delay: $delay_before_switch_line
             - output.turn_on: relay_switch_line
@@ -120,7 +120,7 @@ script:
     then:
       - if:
           condition:
-            lambda: 'return id(status_line) == true;'
+            lambda: 'return id(status_line);'
           then:
             - delay: $delay_before_switch_line
             - output.turn_on: relay_switch_line
@@ -161,7 +161,7 @@ script:
     then:
       - if:
           condition:
-            lambda: 'return id(status_line) == true;'
+            lambda: 'return id(status_line);'
           then:
             - delay: $delay_no_answer
             - script.execute: reject
@@ -198,7 +198,7 @@ script:
                         then:
                           script.execute: reject_no_answer
                         else:
-                          - lambda: 'id(line_status).publish_state("${line_status_close}");'
+                          lambda: 'id(line_status).publish_state("${line_status_close}");'
 
 text_sensor:
   - platform: homeassistant
@@ -243,11 +243,11 @@ binary_sensor:
       delayed_off: $call_end_detect_delay
     on_press:
       - lambda: 'id(status_line) = true;'
-      - logger.log: "CALL TRUE"
+      - logger.log: "Incoming call detected"
       - script.execute: state_call
     on_release:
       - lambda: 'id(status_line) = false;'
-      - logger.log: "CALL FALSE"
+      - logger.log: "Incoming call completed"
     on_state:
       lambda: |-
         if (x) {
@@ -256,15 +256,14 @@ binary_sensor:
           id(line_status).publish_state("${line_status_close}");
         }   
   - platform: gpio
+    id: ${dev_name}_button
     pin:
       number: 0
       mode: INPUT_PULLUP
       inverted: True
-    id: hw_button
     on_press:
-      - then:
-          - switch.turn_on: accept_call
-          - script.execute: state_call
+      then:
+        switch.turn_on: accept_call
     
 output:
   - platform: gpio
@@ -293,20 +292,19 @@ switch:
           id: accept_call
           state: true
       - switch.turn_off: reject_call
-      - logger.log: "ACCEPT_CLICK"
+      - logger.log: "Accept call switch is ON"
       - if:
           condition:
-            lambda: 'return id(status_line) == true;'
+            lambda: 'return id(status_line);'
           then:
-            - logger.log: "ACCEPT_SCRIPT"
+            - logger.log: "Execute action script"
             - script.execute: state_call
           else:
-            - logger.log: "CALL IS NOT DETECT"
-          
+            logger.log: "No incoming call. One-time mode is set."
     turn_off_action:
-      - switch.template.publish:
-          id: accept_call
-          state: false    
+      switch.template.publish:
+        id: accept_call
+        state: false    
     
   - platform: template
     name: ${dev_name}_reject_call
@@ -319,10 +317,13 @@ switch:
       - switch.turn_off: accept_call
       - if:
           condition:
-            lambda: 'return id(status_line) == true;'
+            lambda: 'return id(status_line);'
           then:
+            - logger.log: "Execute action script"   
             - script.execute: state_call
+          else:
+            logger.log: "No incoming call. One-time mode is set."
     turn_off_action:
-      - switch.template.publish:
-          id: reject_call
-          state: false
+      switch.template.publish:
+        id: reject_call
+        state: false
