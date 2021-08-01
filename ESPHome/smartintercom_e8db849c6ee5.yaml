@@ -32,7 +32,7 @@ esphome:
     - SDFS
     - SD(esp8266)
     - ESP8266HTTPClient
-    - ESP8266Audio
+    - ESP8266Audio @ 1.9.1
   includes:
     - lib/ESPAudio.h
   platformio_options:
