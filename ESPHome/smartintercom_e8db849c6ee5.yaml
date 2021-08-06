@@ -16,8 +16,8 @@ substitutions:
 #delay
   call_end_detect_delay: 3000ms     # Interval between rings to detect incoming call
   delay_before_switch_line: 1000ms  # Delay before switch line (answer activate)
-  delay_before_voice: 1000ms         # Delay before play voice
-  delay_before_open_door: 100ms    # Delay before open door
+  delay_before_voice: 1000ms        # Delay before play voice
+  delay_before_open_door: 100ms     # Delay before open door
   delay_open_on_time: 600ms         # How long the "open door button" will be pressed
   delay_after_close_door: 2000ms    # Delay after close door
   delay_no_answer: 30s              # Delay if no answer
@@ -66,7 +66,11 @@ globals:
     type: bool
     restore_value: no
     initial_value: 'false'
-
+  - id: status_mute
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+    
 # Enable Home Assistant API
 api:
   password: "12345678"
@@ -91,8 +95,8 @@ script:
           condition:
             lambda: 'return id(status_line);'
           then:
+            - output.turn_off: down_phone
             - delay: $delay_before_switch_line
-            - output.turn_on: relay_switch_line
             - lambda: 'id(line_status).publish_state("${line_status_answer}");'
             - delay: $delay_before_voice
             - lambda: 'playFile(audio_player, "/user_access_allowed.wav");'
@@ -122,8 +126,8 @@ script:
           condition:
             lambda: 'return id(status_line);'
           then:
+            - output.turn_off: down_phone
             - delay: $delay_before_switch_line
-            - output.turn_on: relay_switch_line
             - lambda: 'id(line_status).publish_state("${line_status_answer}");'
             - delay: $delay_before_voice
             - if:
@@ -164,41 +168,43 @@ script:
             lambda: 'return id(status_line);'
           then:
             - delay: $delay_no_answer
+            - output.turn_on: down_phone
+            - output.turn_on: relay_switch_line
             - script.execute: reject
 
   - id: state_call
     then:
-      if:
-        condition:
-          switch.is_on: accept_call
-        then:
-          script.execute: accept
-        else:
-          if:
-            condition:
-              switch.is_on: reject_call
-            then:
-              script.execute: reject
-            else:
-              if:
-                condition:
-                  lambda: 'return id(current_mode) == 3;'
-                then:
-                  script.execute: accept
-                else:
-                  if:
-                    condition:
-                      lambda: 'return id(current_mode) == 2;'
-                    then:
-                      script.execute: reject
-                    else:
-                      if:
-                        condition:
-                          lambda: 'return id(current_mode) == 1;'
-                        then:
-                          script.execute: reject_no_answer
-                        else:
-                          lambda: 'id(line_status).publish_state("${line_status_close}");'
+      - if:
+          condition:
+            switch.is_on: accept_call
+          then:
+            script.execute: accept
+          else:
+            if:
+              condition:
+                switch.is_on: reject_call
+              then:
+                script.execute: reject
+              else:
+                if:
+                  condition:
+                    lambda: 'return id(current_mode) == 3;'
+                  then:
+                    script.execute: accept
+                  else:
+                    if:
+                      condition:
+                        lambda: 'return id(current_mode) == 2;'
+                      then:
+                        script.execute: reject
+                      else:
+                        if:
+                          condition:
+                            lambda: 'return id(current_mode) == 1;'
+                          then:
+                            script.execute: reject_no_answer
+                          else:
+                            lambda: 'id(line_status).publish_state("${line_status_close}");'
 
 text_sensor:
   - platform: homeassistant
@@ -230,6 +236,11 @@ text_sensor:
     mac_address:
       name: ${dev_name}_mac
       icon: "mdi:lan"
+      
+sensor:
+  - platform: wifi_signal
+    name: ${dev_name}_rssi
+    update_interval: 600s
 
 binary_sensor:
   - platform: gpio
@@ -242,10 +253,20 @@ binary_sensor:
     filters:
       delayed_off: $call_end_detect_delay
     on_press:
+      - if:
+          condition:
+            or:
+#              - lambda: 'return id(status_mute);' # uncomment this on 3 version devices
+              - lambda: 'return id(current_mode) > 1;'
+          then:
+            - output.turn_on: down_phone
+            - output.turn_on: relay_switch_line
       - lambda: 'id(status_line) = true;'
       - logger.log: "Incoming call detected"
       - script.execute: state_call
     on_release:
+      - output.turn_off: down_phone
+      - output.turn_off: relay_switch_line
       - lambda: 'id(status_line) = false;'
       - logger.log: "Incoming call completed"
     on_state:
@@ -255,6 +276,7 @@ binary_sensor:
         } else {
           id(line_status).publish_state("${line_status_close}");
         }   
+        
   - platform: gpio
     id: ${dev_name}_button
     pin:
@@ -281,8 +303,15 @@ output:
     pin:
       number: 13
       mode: OUTPUT
+  - platform: gpio
+    id: down_phone
+    pin:
+      number: 4
+      mode: OUTPUT
 
 switch:
+  - platform: restart
+    name: ${dev_name}_restart
   - platform: template
     name: ${dev_name}_accept_call
     id: accept_call
@@ -327,3 +356,18 @@ switch:
       switch.template.publish:
         id: reject_call
         state: false
+        
+  - platform: template
+    name: ${dev_name}_mute
+    id: mute
+    icon: "mdi:volume-off"
+    turn_on_action:
+      - switch.template.publish:
+          id: mute
+          state: true
+      - lambda: 'id(status_mute) = true;'
+    turn_off_action:
+      - switch.template.publish:
+          id: mute
+          state: false
+      - lambda: 'id(status_mute) = false;'
