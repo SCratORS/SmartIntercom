@@ -95,6 +95,7 @@ script:
           condition:
             lambda: 'return id(status_line);'
           then:
+            - output.turn_on: relay_switch_line
             - output.turn_off: down_phone
             - delay: $delay_before_switch_line
             - lambda: 'id(line_status).publish_state("${line_status_answer}");'
@@ -126,6 +127,7 @@ script:
           condition:
             lambda: 'return id(status_line);'
           then:
+            - output.turn_on: relay_switch_line
             - output.turn_off: down_phone
             - delay: $delay_before_switch_line
             - lambda: 'id(line_status).publish_state("${line_status_answer}");'
@@ -168,8 +170,6 @@ script:
             lambda: 'return id(status_line);'
           then:
             - delay: $delay_no_answer
-            - output.turn_on: down_phone
-            - output.turn_on: relay_switch_line
             - script.execute: reject
 
   - id: state_call
@@ -255,9 +255,7 @@ binary_sensor:
     on_press:
       - if:
           condition:
-            or:
-#              - lambda: 'return id(status_mute);' # uncomment this on 3 version devices
-              - lambda: 'return id(current_mode) > 1;'
+            lambda: 'return id(status_mute);' # uncomment this on 3 version devices
           then:
             - output.turn_on: down_phone
             - output.turn_on: relay_switch_line
