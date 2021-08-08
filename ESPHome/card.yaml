@@ -10,5 +10,6 @@ entities:
         name: Открыть дверь
       - entity: switch.smartintercom_e8db849c6ee5_reject_call
         name: Сбросить вызов
+      - entity: switch.smartintercom_e8db849c6ee5_mute
 show_header_toggle: false
 state_color: false
