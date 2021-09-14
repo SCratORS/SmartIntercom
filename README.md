@@ -25,3 +25,5 @@
 
 Схема устройсва и описание:
 https://easyeda.com/scrators/intercom
+Телеграм канал для обсуждения:
+https://t.me/smartintercom
