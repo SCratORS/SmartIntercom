@@ -22,6 +22,8 @@
 4. В файле конфигурации Home Assistant добавить вспомогательный компонент input_select для управления режимами устройства (Смотри файл configuration.yaml из проекта)
 5. Добавить карточку устройства на панель lovalace из файла card.yaml проекта. ![](images/card.png)
 
+Добавление управления через Телеграм:
+https://github.com/SCratORS/SmartIntercom/issues/3
 
 Схема устройсва и описание:
 https://easyeda.com/scrators/intercom
