@@ -22,8 +22,8 @@ class ESPAudio : public Component {
         AudioGeneratorWAV *wav;
         AudioFileSourceLittleFS *file;
         AudioFileSourceHTTPStream *stream;
-        AudioOutputI2SNoDAC *out;
         AudioFileSourceBuffer *buff;
+        AudioOutputI2SNoDAC *out;
 
         void stop () {
             this->wav->stop();
@@ -56,6 +56,10 @@ class ESPAudio : public Component {
 
         bool start_stream(const char* URL) {
             this->stream = new AudioFileSourceHTTPStream(URL);
+            if (!this->stream) {
+                DEBUGa("Can't create stream %s", URL);
+                return false;
+            }
             this->buff = new AudioFileSourceBuffer(this->stream, 2048);
             this->out = new AudioOutputI2SNoDAC();
             this->wav = new AudioGeneratorWAV();
@@ -71,7 +75,7 @@ class ESPAudio : public Component {
 
     
     public:
-        ESPAudio() : wav(NULL), file(NULL), out(NULL), buff(NULL), stream(NULL) {}
+        ESPAudio() : wav(NULL), file(NULL), stream(NULL), buff(NULL),  out(NULL) {}
 
         void setup() override {
             LittleFS.begin();
