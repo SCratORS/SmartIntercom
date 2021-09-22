@@ -32,7 +32,7 @@ esphome:
     - SDFS
     - SD(esp8266)
     - ESP8266HTTPClient
-    - ESP8266Audio @ 1.9.1
+    - ESP8266Audio@1.9.1
     - https://github.com/dplasa/FTPClientServer
   includes:
     - lib/ESPAudio.h
@@ -94,7 +94,6 @@ script:
           then:
             - output.turn_on: relay_switch_line
             - output.turn_off: down_phone
-            - delay: $delay_before_switch_line
             - lambda: 'id(line_status).publish_state("${line_status_answer}");'
             - delay: $delay_before_voice
             - lambda: 'playFile(audio_player, "/user_access_allowed.wav");'
@@ -126,7 +125,6 @@ script:
           then:
             - output.turn_on: relay_switch_line
             - output.turn_off: down_phone
-            - delay: $delay_before_switch_line
             - lambda: 'id(line_status).publish_state("${line_status_answer}");'
             - delay: $delay_before_voice
             - if:
@@ -250,14 +248,16 @@ binary_sensor:
     filters:
       delayed_off: $call_end_detect_delay
     on_press:
+      - lambda: 'id(status_line) = true;'
+      - logger.log: "Incoming call detected"
       - if:
           condition:
             lambda: 'return id(status_mute);' # uncomment this on 3 version devices
           then:
             - output.turn_on: down_phone
             - output.turn_on: relay_switch_line
-      - lambda: 'id(status_line) = true;'
-      - logger.log: "Incoming call detected"
+          else:
+            - delay: $delay_before_switch_line
       - script.execute: state_call
     on_release:
       - output.turn_off: down_phone
