@@ -1,9 +1,0 @@
-input_select:
-  smartintercom_e8db849c6ee5_modes:
-    name: "Режим работы домофона"
-    icon: mdi:deskphone
-    options:
-      - "Не активен"
-      - "Сброс вызова если нет ответа"
-      - "Сброс вызова"
-      - "Открывать всегда"
