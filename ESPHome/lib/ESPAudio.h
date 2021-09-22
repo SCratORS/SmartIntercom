@@ -6,7 +6,7 @@
 #include "AudioFileSourceHTTPStream.h"
 #include "AudioFileSourceBuffer.h"
 
-#define DEBUGf(format, ...) ESP_LOGD("audio", format "\n", ##__VA_ARGS__)
+#define DEBUGa(format, ...) ESP_LOGD("audio", format "\n", ##__VA_ARGS__)
 
 #define get_component(constructor) static_cast<ESPAudio *> \
   (const_cast<custom_component::CustomComponentConstructor *>(&constructor)->get_component(0))
@@ -33,22 +33,22 @@ class ESPAudio : public Component {
             delete(this->buff); this->buff=NULL;
             delete(this->stream); this->stream=NULL;
             pinMode(I2SO_DATA, OUTPUT);
-            DEBUGf("Stopped playing");
+            DEBUGa("Stopped playing");
         }
         
         bool start_file(const char* fileName) {
             this->file = new AudioFileSourceLittleFS(fileName);
             if (!this->file) {
-                DEBUGf("Can't find file %s", fileName);
+                DEBUGa("Can't find file %s", fileName);
                 return false;
             }
             this->out = new AudioOutputI2SNoDAC();
             this->wav = new AudioGeneratorWAV();
             if(this->wav->begin(this->file, this->out)) {
-                DEBUGf("Started playing WAV file %s", fileName);
+                DEBUGa("Started playing WAV file %s", fileName);
                 return true;
             } else {
-                DEBUGf("Failed to play WAV file %s", fileName);
+                DEBUGa("Failed to play WAV file %s", fileName);
                 stop();
                 return false;
             }
@@ -60,10 +60,10 @@ class ESPAudio : public Component {
             this->out = new AudioOutputI2SNoDAC();
             this->wav = new AudioGeneratorWAV();
             if(this->wav->begin(this->buff, this->out)) {
-                DEBUGf("Started playing URL stream %s", URL);
+                DEBUGa("Started playing URL stream %s", URL);
                 return true;
             } else {
-                DEBUGf("Failed to play URL stream %s", URL);
+                DEBUGa("Failed to play URL stream %s", URL);
                 stop();
                 return false;
             }
