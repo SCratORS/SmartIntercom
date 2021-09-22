@@ -4,7 +4,8 @@ substitutions:
 #input_select_mode_value
   input_select_disable: "Не активен"
   input_select_no_answer: "Сброс вызова если нет ответа" 
-  input_select_reject: "Сброс вызова" 
+  input_select_reject: "Сброс вызова"
+  input_select_accept: "Открывать всегда"
   
 #line_status_text
   line_status_call:   "Вызов"
@@ -201,10 +202,18 @@ script:
                           else:
                             lambda: 'id(line_status).publish_state("${line_status_close}");'
 
-text_sensor:
-  - platform: homeassistant
-    entity_id: input_select.${dev_name}_modes
+select:
+  - platform: template
+    name: ${dev_name}_modes
+    icon: "mdi:deskphone"
+    optimistic: true
     id: mode_select
+    options:
+      - ${input_select_disable}
+      - ${input_select_no_answer}
+      - ${input_select_reject}
+      - ${input_select_accept}
+    initial_option: ${input_select_disable}
     on_value:
       lambda: |-
           if (id(mode_select).state == "${input_select_disable}") {
@@ -216,6 +225,8 @@ text_sensor:
           } else {
             id(current_mode) = 3;
           }
+          
+text_sensor:
   - platform: template
     id: line_status
     icon: "mdi:bell"
