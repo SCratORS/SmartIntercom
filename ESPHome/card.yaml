@@ -3,7 +3,7 @@ entities:
   - entity: sensor.smartintercom_e8db849c6ee5_line_status
     name: Домофон
     secondary_info: last-changed
-  - entity: input_select.smartintercom_e8db849c6ee5_modes
+  - entity: select.smartintercom_e8db849c6ee5_modes
   - type: buttons
     entities:
       - entity: switch.smartintercom_e8db849c6ee5_accept_call
