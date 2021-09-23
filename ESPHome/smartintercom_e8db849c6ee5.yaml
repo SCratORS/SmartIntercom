@@ -8,7 +8,7 @@ substitutions:
   led_indicator: GPIO13         # External led indicator
   detect_line: GPIO12           # Line ring detector
   button_boot: GPIO0            # Boot button
-  relay_line:	GPIO14            # Relay selector phone - emulation
+  relay_line: GPIO14            # Relay selector phone - emulation
   switch_open: GPIO5            # Open door emulation
   switch_phone: GPIO4           # Down/Up phone emulation
   
