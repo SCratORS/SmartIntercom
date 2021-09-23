@@ -1,6 +1,17 @@
 substitutions:
   dev_name: smartintercom_e8db849c6ee5
   
+#ESP8266_pinout_mapping
+  base: esp12e
+  base_platform: ESP8266
+  led_status: GPIO2             # Internal led on esp module
+  led_indicator: GPIO13         # External led indicator
+  detect_line: GPIO12           # Line ring detector
+  button_boot: GPIO0            # Boot button
+  relay_line:	GPIO14            # Relay selector phone - emulation
+  switch_open: GPIO5            # Open door emulation
+  switch_phone: GPIO4           # Down/Up phone emulation
+  
 #input_select_mode_value
   input_select_disable: "Не активен"
   input_select_no_answer: "Сброс вызова если нет ответа" 
@@ -25,8 +36,8 @@ substitutions:
   
 esphome:
   name: ${dev_name}
-  platform: ESP8266
-  board: esp12e
+  platform: ${base_platform}
+  board: ${base}
   libraries:
     - SPI
     - ESP8266SdFat
@@ -76,7 +87,7 @@ ota:
 
 status_led:
   pin:
-    number: GPIO2
+    number: $led_status
     inverted: True
 
 custom_component:
@@ -253,7 +264,7 @@ binary_sensor:
     id: line_detect
     name: ${dev_name}_line_detect
     pin:
-      number: 12
+      number: $detect_line
       mode: INPUT_PULLUP
       inverted: True
     filters:
@@ -286,7 +297,7 @@ binary_sensor:
   - platform: gpio
     id: ${dev_name}_button
     pin:
-      number: 0
+      number: $button_boot
       mode: INPUT_PULLUP
       inverted: True
     on_press:
@@ -297,22 +308,22 @@ output:
   - platform: gpio
     id: relay_switch_line
     pin:
-      number: 14
+      number: $relay_line
       mode: OUTPUT
   - platform: gpio
     id: open_door
     pin:
-      number: 5
+      number: $switch_open
       mode: OUTPUT
   - platform: gpio
     id: indicator
     pin:
-      number: 13
+      number: $led_indicator
       mode: OUTPUT
   - platform: gpio
     id: down_phone
     pin:
-      number: 4
+      number: $switch_phone
       mode: OUTPUT
 
 switch:
