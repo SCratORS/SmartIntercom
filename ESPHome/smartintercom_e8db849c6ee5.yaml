@@ -278,8 +278,7 @@ binary_sensor:
           then:
             - output.turn_on: down_phone
             - output.turn_on: relay_switch_line
-          else:
-            - delay: $delay_before_switch_line
+      - delay: $delay_before_switch_line
       - script.execute: state_call
     on_release:
       - output.turn_off: down_phone
