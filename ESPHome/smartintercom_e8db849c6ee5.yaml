@@ -45,7 +45,7 @@ esphome:
     - SD(esp8266)
     - ESP8266HTTPClient
     - ESP8266Audio@1.9.1
-    - https://github.com/dplasa/FTPClientServer
+    - https://github.com/SCratORS/FTPClientServer
   includes:
     - lib/ESPAudio.h
     - lib/ESPFtp.h
