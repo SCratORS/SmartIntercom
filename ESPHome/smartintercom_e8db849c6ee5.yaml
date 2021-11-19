@@ -43,9 +43,11 @@ esphome:
     - ESP8266SdFat
     - SDFS
     - SD(esp8266)
+    - ESP8266WiFi
     - ESP8266HTTPClient
-    - ESP8266Audio@1.9.1
+    - LittleFS(esp8266)
     - https://github.com/SCratORS/FTPClientServer
+    - ESP8266Audio@1.9.1
   includes:
     - lib/ESPAudio.h
     - lib/ESPFtp.h
