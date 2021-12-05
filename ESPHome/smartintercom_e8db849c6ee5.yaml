@@ -47,7 +47,7 @@ esphome:
     - ESP8266HTTPClient
     - LittleFS(esp8266)
     - https://github.com/SCratORS/FTPClientServer
-    - ESP8266Audio@1.9.1
+    - ESP8266Audio
   includes:
     - lib/ESPAudio.h
     - lib/ESPFtp.h
