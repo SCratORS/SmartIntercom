@@ -87,10 +87,37 @@ api:
 ota:
   password: "12345678"
 
-status_led:
-  pin:
-    number: $led_status
-    inverted: True
+light:
+  - platform: status_led
+    id: led_status
+    internal: true
+    pin:
+      number: $led_status
+      inverted: True
+  - platform: monochromatic
+    id: led_indicator
+    output: indicator
+    internal: true
+    restore_mode: ALWAYS_OFF
+    default_transition_length: 0ms
+    effects:
+      - pulse:
+          name: pulse
+          update_interval: 2s
+      - strobe:
+          name: blink
+          colors:
+            - state: true
+              duration: 100ms
+            - state: false
+              duration: 1900ms
+      - strobe:
+          name: calling
+          colors:
+            - state: true
+              duration: 50ms
+            - state: false
+              duration: 50ms
 
 custom_component:
   - id: ftp_server
@@ -99,6 +126,39 @@ custom_component:
     lambda: 'return {new ESPAudio()};'
 
 script:
+  - id: led_off
+    then:
+      - light.turn_off:
+          id: led_indicator
+      - if:
+          condition:
+            lambda: 'return id(status_mute);' # uncomment this on 3 version devices
+          then:
+            light.turn_on:
+              id: led_indicator
+              effect: pulse
+  - id: led_blink
+    then:
+      - light.turn_off:
+          id: led_indicator
+      - light.turn_on:
+          id: led_indicator
+          effect: blink
+  - id: led_calling
+    then:
+      - light.turn_off:
+          id: led_indicator
+      - light.turn_on:
+          id: led_indicator
+          effect: calling
+  - id: led_pulse
+    then:
+      - light.turn_off:
+          id: led_indicator
+      - light.turn_on:
+          id: led_indicator
+          effect: pulse
+
   # Accept incoming call
   - id: accept
     then:
@@ -114,14 +174,12 @@ script:
             - wait_until:
                 lambda: 'return !isPlaying(audio_player);'
             - delay: $delay_before_open_door
-            - output.turn_on: indicator
             - output.turn_on: open_door
             - lambda: 'id(line_status).publish_state("${line_status_open}");'
             - delay: $delay_open_on_time
             - output.turn_off: open_door
             - lambda: 'id(line_status).publish_state("${line_status_reject}");'
             - delay: $delay_after_close_door
-            - output.turn_off: indicator
             - output.turn_off: relay_switch_line
             - lambda: 'id(line_status).publish_state("${line_status_close}");'
             - if:
@@ -272,6 +330,7 @@ binary_sensor:
     filters:
       delayed_off: $call_end_detect_delay
     on_press:
+      - script.execute: led_calling
       - lambda: 'id(status_line) = true;'
       - logger.log: "Incoming call detected"
       - if:
@@ -287,6 +346,7 @@ binary_sensor:
       - output.turn_off: relay_switch_line
       - lambda: 'id(status_line) = false;'
       - logger.log: "Incoming call completed"
+      - script.execute: led_off
     on_state:
       lambda: |-
         if (x) {
@@ -303,7 +363,7 @@ binary_sensor:
       inverted: True
     on_press:
       then:
-        switch.turn_on: accept_call
+        switch.toggle: accept_call
     
 output:
   - platform: gpio
@@ -316,7 +376,7 @@ output:
     pin:
       number: $switch_open
       mode: OUTPUT
-  - platform: gpio
+  - platform: esp8266_pwm
     id: indicator
     pin:
       number: $led_indicator
@@ -347,11 +407,20 @@ switch:
             - logger.log: "Execute action script"
             - script.execute: state_call
           else:
-            logger.log: "No incoming call. One-time mode is set."
+            - script.execute: led_blink
+            - logger.log: "No incoming call. One-time mode is set."
     turn_off_action:
-      switch.template.publish:
-        id: accept_call
-        state: false    
+      - switch.template.publish:
+          id: accept_call
+          state: false
+      - if:
+          condition:
+            lambda: 'return id(status_line);'
+          then:
+            script.execute: led_calling
+          else:
+            script.execute: led_off
+
     
   - platform: template
     name: ${dev_name}_reject_call
@@ -369,12 +438,20 @@ switch:
             - logger.log: "Execute action script"   
             - script.execute: state_call
           else:
-            logger.log: "No incoming call. One-time mode is set."
+            - script.execute: led_blink
+            - logger.log: "No incoming call. One-time mode is set."
     turn_off_action:
-      switch.template.publish:
-        id: reject_call
-        state: false
-        
+      - switch.template.publish:
+          id: reject_call
+          state: false
+      - if:
+          condition:
+            lambda: 'return id(status_line);'
+          then:
+            script.execute: led_calling
+          else:
+            script.execute: led_off
+
   - platform: template
     name: ${dev_name}_mute
     id: mute
@@ -384,8 +461,25 @@ switch:
           id: mute
           state: true
       - lambda: 'id(status_mute) = true;'
+      - if:
+          condition:
+            and:
+              - lambda: 'return id(status_line) == false;'
+              - switch.is_off: accept_call
+              - switch.is_off: reject_call
+          then:
+              script.execute: led_pulse
+
     turn_off_action:
       - switch.template.publish:
           id: mute
           state: false
       - lambda: 'id(status_mute) = false;'
+      - if:
+          condition:
+            and:
+              - lambda: 'return id(status_line) == false;'
+              - switch.is_off: accept_call
+              - switch.is_off: reject_call
+          then:
+              script.execute: led_off
