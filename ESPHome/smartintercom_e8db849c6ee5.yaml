@@ -42,10 +42,11 @@ esphome:
     - SPI
     - ESP8266SdFat
     - SDFS
-    - SD(esp8266)
+    - SD
     - ESP8266WiFi
     - ESP8266HTTPClient
-    - LittleFS(esp8266)
+    - LittleFS
+    - I2S
     - https://github.com/SCratORS/FTPClientServer
     - ESP8266Audio
   includes:
@@ -60,6 +61,11 @@ esphome:
 wifi:
   ssid: !secret ssid
   password: !secret passwd
+  ap:
+    ssid: ${dev_name}
+    password: "12345678"
+
+captive_portal:
 
 # Enable logging
 logger:
@@ -167,7 +173,7 @@ script:
             lambda: 'return id(status_line);'
           then:
             - output.turn_on: relay_switch_line
-            - output.turn_off: down_phone
+            - output.turn_on: phone_upper
             - lambda: 'id(line_status).publish_state("${line_status_answer}");'
             - delay: $delay_before_voice
             - lambda: 'playFile(audio_player, "/user_access_allowed.wav");'
@@ -196,7 +202,7 @@ script:
             lambda: 'return id(status_line);'
           then:
             - output.turn_on: relay_switch_line
-            - output.turn_off: down_phone
+            - output.turn_on: phone_upper
             - lambda: 'id(line_status).publish_state("${line_status_answer}");'
             - delay: $delay_before_voice
             - if:
@@ -330,19 +336,22 @@ binary_sensor:
     filters:
       delayed_off: $call_end_detect_delay
     on_press:
-      - script.execute: led_calling
-      - lambda: 'id(status_line) = true;'
-      - logger.log: "Incoming call detected"
       - if:
           condition:
-            lambda: 'return id(status_mute);' # uncomment this on 3 version devices
+            lambda: 'return id(status_line) == false;'
           then:
-            - output.turn_on: down_phone
-            - output.turn_on: relay_switch_line
-      - delay: $delay_before_switch_line
-      - script.execute: state_call
+            - script.execute: led_calling
+            - lambda: 'id(status_line) = true;'
+            - logger.log: "Incoming call detected"
+            - if:
+                condition:
+                  lambda: 'return id(status_mute);'
+                then:
+                  output.turn_on: relay_switch_line
+            - delay: $delay_before_switch_line
+            - script.execute: state_call
     on_release:
-      - output.turn_off: down_phone
+      - output.turn_off: phone_upper
       - output.turn_off: relay_switch_line
       - lambda: 'id(status_line) = false;'
       - logger.log: "Incoming call completed"
@@ -382,10 +391,11 @@ output:
       number: $led_indicator
       mode: OUTPUT
   - platform: gpio
-    id: down_phone
+    id: phone_upper
     pin:
       number: $switch_phone
       mode: OUTPUT
+      inverted: True
 
 switch:
   - platform: restart
