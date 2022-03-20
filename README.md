@@ -22,8 +22,8 @@
 4. Добавить карточку устройства на панель lovalace из файла card.yaml проекта. ![](images/card.png)
 
 При использовании ESP Download Tools (ESP8266)
-/bin/smartintercom_e8db849c6ee5.bin - Прошивать в адрес 0x0
-/bin/mklittlefs_0x200000.bin - Прошивать в адрес 0x200000
+1. /bin/smartintercom_e8db849c6ee5.bin - Прошивать в адрес 0x0
+2. /bin/mklittlefs_0x200000.bin - Прошивать в адрес 0x200000
 
 Добавление управления через Телеграм:
 https://github.com/SCratORS/SmartIntercom/issues/3
