@@ -266,13 +266,13 @@ script:
               condition:
                 switch.is_on: delivery
               then:
-                lambda: 'playStream(audio_player, id(delivery_access_link).state.c_str());'
+                lambda: 'playFile(audio_player, id(delivery_access_link).state.c_str());'
               else:
                 if:
                   condition:
                     lambda: 'return id(status_sound);'
                   then:
-                    lambda: 'playStream(audio_player, id(user_access_link).state.c_str());'
+                    lambda: 'playFile(audio_player, id(user_access_link).state.c_str());'
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
           - delay: $delay_before_open_door
@@ -310,15 +310,15 @@ script:
                   condition:
                     lambda: 'return id(current_mode) == 2;'
                   then:
-                    lambda: 'playStream(audio_player, id(user_denied_link).state.c_str());'
+                    lambda: 'playFile(audio_player, id(user_denied_link).state.c_str());'
                   else:
                     if:
                       condition:
                         switch.is_on: reject_call
                       then:
-                        lambda: 'playStream(audio_player, id(user_no_connect_link).state.c_str());'
+                        lambda: 'playFile(audio_player, id(user_no_connect_link).state.c_str());'
                       else:
-                        lambda: 'playStream(audio_player, id(user_no_answer_link).state.c_str());'
+                        lambda: 'playFile(audio_player, id(user_no_answer_link).state.c_str());'
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
           - delay: $delay_open_on_time
