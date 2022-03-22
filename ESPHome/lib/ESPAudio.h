@@ -31,7 +31,6 @@ void statusCBFn(void *cbData, int code, const char *message) {
   (const_cast<custom_component::CustomComponentConstructor *>(&constructor)->get_component(0))
 
 #define playFile(audioComponent, fname) get_component(audioComponent)->play_file(fname)
-#define playStream(audioComponent, furl) get_component(audioComponent)->play_stream(furl)
 #define isPlaying(audioComponent) get_component(audioComponent)->isPlay()
 
 #define I2SO_DATA 2
@@ -168,26 +167,17 @@ class ESPAudio : public Component {
             if(this->file || this->stream) stop();
             bool play_result = false;
             const char *fext = get_filename_ext(fName);
-            if (strcmp(fext, "mp3") == 0) play_result = start_file_mp3(fName);
-            else if (strcmp(fext, "wav") == 0) play_result = start_file_wav(fName);
-            else DEBUGa("Unknown audio file type");
+            char * http = strstr(fName, "http://");
+            char * https = strstr(fName, "https://");
+            bool play_stream = (http && (http-fName)==0) || (https && (https-fName==0));
+            if (strcmp(fext, "mp3") == 0) play_result = play_stream?start_stream_mp3(fName):start_file_mp3(fName);
+            else if (strcmp(fext, "wav") == 0) play_result = play_stream?start_stream_wav(fName):start_file_wav(fName);
+            else DEBUGa("Unknown audio file type %s", fName);
             if (play_result) DEBUGa("Started playing audio file %s", fName);
             else { DEBUGa("Failed to play audio file %s", fName);stop();}   
         }
 
-        void play_stream(const char* fURL) {
-            if(this->file || this->stream) stop();
-            const char *fext = get_filename_ext(fURL);
-            bool play_result = false;
-            if (strcmp(fext, "mp3") == 0) play_result = start_stream_mp3(fURL);
-            else if (strcmp(fext, "wav") == 0) play_result = start_stream_wav(fURL);
-            else DEBUGa("Unknown URL type");
-            if (play_result) DEBUGa("Started playing URL stream %s", fURL);
-            else { DEBUGa("Failed to play URL stream %s", fURL);stop();}
-        }
-        
         bool isPlay() {
             return (this->wav && this->wav->isRunning()) || (this->mp3 && this->mp3->isRunning());
         }
-    
 };
