@@ -1,0 +1,40 @@
+smartintercom_nelma5_user_no_connect_link:
+    name: 'Ссылка на аудио файл "Абонент не доступен"'
+    icon: mdi:file-link
+    initial: "http://localhost/user_no_connect.wav"
+    min: 7
+    max: 100
+    pattern: http://.*(\.mp3|\.wav)
+    mode: text
+smartintercom_nelma5_user_no_answer_link:
+    name: 'Ссылка на аудио файл "Абонент не отвечает"'
+    icon: mdi:file-link
+    initial: "http://localhost/user_no_answer.wav"
+    min: 7
+    max: 100
+    pattern: http://.*(\.mp3|\.wav)
+    mode: text
+smartintercom_nelma5_delivery_access_link:
+    name: 'Ссылка на аудио файл "Доступ для курьера"'
+    icon: mdi:file-link
+    initial: "http://localhost/delivery_access.wav"
+    min: 7
+    max: 100
+    pattern: http://.*(\.mp3|\.wav)
+    mode: text
+smartintercom_nelma5_user_denied_link:
+    name: 'Ссылка на аудио файл "Доступ запрещён"'
+    icon: mdi:file-link
+    initial: "http://localhost/user_denied.wav"
+    min: 7
+    max: 100
+    pattern: http://.*(\.mp3|\.wav)
+    mode: text
+smartintercom_nelma5_user_access_link:
+    name: 'Ссылка на аудио файл "Доступ разрешен"'
+    icon: mdi:file-link
+    initial: "http://localhost/user_access.wav"
+    min: 7
+    max: 100
+    pattern: http://.*(\.mp3|\.wav)
+    mode: text
