@@ -60,10 +60,11 @@ esphome:
       
 esp8266:
   board: ${base}
-
+  restore_from_flash: true
+  
 wifi:
-  ssid: !secret ssid1
-  password: !secret passwd1
+  ssid: !secret ssid
+  password: !secret passwd
   ap:
     ssid: ${dev_name}
     password: "12345678"
@@ -91,8 +92,11 @@ globals:
     initial_value: 'true'
   - id: status_once_mode
     type: int
-    initial_value: '0'   
-    
+    initial_value: '0'
+  - id: status_api
+    type: bool
+    initial_value: 'false'
+
 # Enable Home Assistant API
 api:
   password: "12345678"
@@ -271,13 +275,29 @@ script:
               condition:
                 switch.is_on: delivery
               then:
-                lambda: 'playFile(audio_player, "/delivery_access_allowed.wav");'
+                if:
+                  condition:
+                    and:
+                      - api.connected:
+                      - lambda: 'return id(delivery_access_link).state != "";'
+                  then:
+                    lambda: 'playFile(audio_player, id(delivery_access_link).state.c_str());'
+                  else:
+                    lambda: 'playFile(audio_player, "/delivery_access_allowed.wav");'
               else:
                 if:
                   condition:
                     lambda: 'return id(status_sound);'
                   then:
-                    lambda: 'playFile(audio_player, "/user_access_allowed.wav");'
+                    if:
+                      condition:
+                        and:
+                          - api.connected:
+                          - lambda: 'return id(user_access_link).state != "";'
+                      then:
+                        lambda: 'playFile(audio_player, id(user_access_link).state.c_str());'
+                      else:
+                        lambda: 'playFile(audio_player, "/user_access_allowed.wav");'                   
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
           - delay: $delay_before_open_door
@@ -315,15 +335,39 @@ script:
                   condition:
                     lambda: 'return id(current_mode) == 2;'
                   then:
-                    lambda: 'playFile(audio_player, "/access_denied.wav");'
+                    if:
+                      condition:
+                        and:
+                        - api.connected:
+                        - lambda: 'return id(user_denied_link).state != "";'
+                      then:
+                        lambda: 'playFile(audio_player, id(user_denied_link).state.c_str());'
+                      else:
+                        lambda: 'playFile(audio_player, "/access_denied.wav");'                  
                   else:
                     if:
                       condition:
                         switch.is_on: reject_call
                       then:
-                        lambda: 'playFile(audio_player, "/user_no_connect.wav");'
+                        if:
+                          condition:
+                            and:
+                            - api.connected:
+                            - lambda: 'return id(user_no_connect_link).state != "";'
+                          then:
+                            lambda: 'playFile(audio_player, id(user_no_connect_link).state.c_str());'
+                          else:
+                            lambda: 'playFile(audio_player, "/user_no_connect.wav");'                    
                       else:
-                        lambda: 'playFile(audio_player, "/user_no_answer.wav");'
+                        if:
+                          condition:
+                            and:
+                            - api.connected:
+                            - lambda: 'return id(user_no_answer_link).state != "";'
+                          then:
+                            lambda: 'playFile(audio_player, id(user_no_answer_link).state.c_str());'
+                          else:
+                            lambda: 'playFile(audio_player, "/user_no_answer.wav");'
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
           - delay: $delay_open_on_time
@@ -421,7 +465,22 @@ text_sensor:
     mac_address:
       name: ${dev_name}_mac
       icon: "mdi:lan"
-      
+  - platform: homeassistant
+    entity_id: input_text.${dev_name}_user_no_connect_link
+    id: user_no_connect_link
+  - platform: homeassistant
+    entity_id: input_text.${dev_name}_user_no_answer_link
+    id: user_no_answer_link
+  - platform: homeassistant
+    entity_id: input_text.${dev_name}_delivery_access_link
+    id: delivery_access_link
+  - platform: homeassistant
+    entity_id: input_text.${dev_name}_user_denied_link
+    id: user_denied_link
+  - platform: homeassistant
+    entity_id: input_text.${dev_name}_user_access_link
+    id: user_access_link
+
 sensor:
   - platform: wifi_signal
     name: ${dev_name}_rssi
