@@ -1,6 +1,7 @@
 substitutions:
   dev_name: smartintercom_nelma5
-  
+  api_passwd: "12345678"
+
 #ESP8266_pinout_mapping
   base: esp32dev
   led_status: GPIO16             # Internal led on esp module
@@ -41,13 +42,9 @@ esphome:
     - WiFi
     - WiFiClientSecure
     - FS
-    - https://github.com/SCratORS/FTPClientServer
     - ESP8266Audio
   includes:
     - lib/ESPAudio.h
-    - lib/ESPFtp.h
-  platformio_options:
-      board_build.partitions: "../../../partitions/flash.4m.app.1.42m.spiffs.1.05m.csv"
   on_boot:
     priority: -100
     then:
@@ -63,10 +60,10 @@ logger:
 
 # Enable Home Assistant API
 api:
-  password: "12345678"
+  password: ${api_passwd}
 
 ota:
-  password: "12345678"
+  password: ${api_passwd}
   
 wifi:
   ssid: !secret wifi_ssid
@@ -74,41 +71,33 @@ wifi:
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
-    ssid: "smartintercom-nelma5"
-    password: "12345678"
+    ssid: ${dev_name}
+    password: ${api_passwd}
 
 captive_portal:
 
 custom_component:
-  - id: ftp_server
-    lambda: 'return {new ESPFtp("","")};' # login, password. Default anonymous  
   - id: audio_player
     lambda: 'return {new ESPAudio()};'
 
 globals:
   - id: current_mode
     type: int
-    restore_value: yes
     initial_value: '0'
   - id: status_line
     type: bool
-    restore_value: no
     initial_value: 'false'
   - id: status_mute
     type: bool
-    restore_value: yes
     initial_value: 'false'
   - id: status_leding
     type: bool
-    restore_value: yes
     initial_value: 'true'
   - id: status_sound
     type: bool
-    restore_value: yes
     initial_value: 'true'
   - id: status_once_mode
     type: int
-    restore_value: yes
     initial_value: '0'   
     
 light:
@@ -277,13 +266,13 @@ script:
               condition:
                 switch.is_on: delivery
               then:
-                lambda: 'playFile(audio_player, "/delivery_access_allowed.wav");'
+                lambda: 'playStream(audio_player, id(delivery_access_link).state.c_str());'
               else:
                 if:
                   condition:
                     lambda: 'return id(status_sound);'
                   then:
-                    lambda: 'playFile(audio_player, "/user_access_allowed.wav");'
+                    lambda: 'playStream(audio_player, id(user_access_link).state.c_str());'
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
           - delay: $delay_before_open_door
@@ -321,15 +310,15 @@ script:
                   condition:
                     lambda: 'return id(current_mode) == 2;'
                   then:
-                    lambda: 'playFile(audio_player, "/access_denied.wav");'
+                    lambda: 'playStream(audio_player, id(user_denied_link).state.c_str());'
                   else:
                     if:
                       condition:
                         switch.is_on: reject_call
                       then:
-                        lambda: 'playFile(audio_player, "/user_no_connect.wav");'
+                        lambda: 'playStream(audio_player, id(user_no_connect_link).state.c_str());'
                       else:
-                        lambda: 'playFile(audio_player, "/user_no_answer.wav");'
+                        lambda: 'playStream(audio_player, id(user_no_answer_link).state.c_str());'
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
           - delay: $delay_open_on_time
@@ -426,12 +415,27 @@ text_sensor:
     mac_address:
       name: ${dev_name}_mac
       icon: "mdi:lan"
+  - platform: homeassistant
+    entity_id: input_text.${dev_name}_user_no_connect_link
+    id: user_no_connect_link
+  - platform: homeassistant
+    entity_id: input_text.${dev_name}_user_no_answer_link
+    id: user_no_answer_link
+  - platform: homeassistant
+    entity_id: input_text.${dev_name}_delivery_access_link
+    id: delivery_access_link
+  - platform: homeassistant
+    entity_id: input_text.${dev_name}_user_denied_link
+    id: user_denied_link
+  - platform: homeassistant
+    entity_id: input_text.${dev_name}_user_access_link
+    id: user_access_link      
       
 sensor:
   - platform: wifi_signal
     name: ${dev_name}_rssi
     update_interval: 600s
-
+    
 binary_sensor:
   - platform: gpio
     id: line_detect
