@@ -1,3 +1,10 @@
+#############################################
+#    NOTE:                                  #
+#    add to configuration.yaml              #
+#    input_text: !include input_text.yaml   #
+#############################################
+
+########## For ESP32 Nelma5
 smartintercom_nelma5_user_no_connect_link:
     name: 'Ссылка на аудио файл "Абонент не доступен"'
     icon: mdi:file-link
@@ -37,4 +44,46 @@ smartintercom_nelma5_user_access_link:
     min: 7
     max: 100
     pattern: http://.*(\.mp3|\.wav)
+    mode: text
+    
+########## For ESP8266 smartintercom_e8db849c6ee5
+smartintercom_e8db849c6ee5_user_no_connect_link:
+    name: 'Ссылка на аудио файл "Абонент не доступен"'
+    icon: mdi:file-music
+    initial: "/user_no_connect.wav"
+    min: 2
+    max: 100
+    pattern: (/|h).*(\.mp3|\.wav)
+    mode: text
+smartintercom_e8db849c6ee5_user_no_answer_link:
+    name: 'Ссылка на аудио файл "Абонент не отвечает"'
+    icon: mdi:file-music
+    initial: "/user_no_answer.wav"
+    min: 2
+    max: 100
+    pattern: (/|h).*(\.mp3|\.wav)
+    mode: text
+smartintercom_e8db849c6ee5_delivery_access_link:
+    name: 'Ссылка на аудио файл "Доступ для курьера"'
+    icon: mdi:file-music
+    initial: "/delivery_access_allowed.wav"
+    min: 2
+    max: 100
+    pattern: (/|h).*(\.mp3|\.wav)
+    mode: text
+smartintercom_e8db849c6ee5_user_denied_link:
+    name: 'Ссылка на аудио файл "Доступ запрещён"'
+    icon: mdi:file-music
+    initial: "/access_denied.wav"
+    min: 2
+    max: 100
+    pattern: (/|h).*(\.mp3|\.wav)
+    mode: text
+smartintercom_e8db849c6ee5_user_access_link:
+    name: 'Ссылка на аудио файл "Доступ разрешен"'
+    icon: mdi:file-music
+    initial: "/user_access_allowed.wav"
+    min: 2
+    max: 100
+    pattern: (/|h).*(\.mp3|\.wav)
     mode: text
