@@ -445,7 +445,8 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: true
     filters:
-      delayed_off: $call_end_detect_delay
+      - delayed_off: $call_end_detect_delay
+      - delayed_on: 100ms
     on_press:
       if:
         condition:
