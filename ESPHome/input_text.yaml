@@ -8,7 +8,6 @@
 smartintercom_nelma5_user_no_connect_link:
     name: 'Ссылка на аудио файл "Абонент не доступен"'
     icon: mdi:file-music
-    initial: "http://localhost/user_no_connect.wav"
     min: 2
     max: 100
     pattern: (/\w|http://).*(\.mp3|\.wav)
@@ -16,7 +15,6 @@ smartintercom_nelma5_user_no_connect_link:
 smartintercom_nelma5_user_no_answer_link:
     name: 'Ссылка на аудио файл "Абонент не отвечает"'
     icon: mdi:file-music
-    initial: "http://localhost/user_no_answer.wav"
     min: 2
     max: 100
     pattern: (/\w|http://).*(\.mp3|\.wav)
@@ -24,7 +22,6 @@ smartintercom_nelma5_user_no_answer_link:
 smartintercom_nelma5_delivery_access_link:
     name: 'Ссылка на аудио файл "Доступ для курьера"'
     icon: mdi:file-music
-    initial: "http://localhost/delivery_access_allowed.wav"
     min: 2
     max: 100
     pattern: (/\w|http://).*(\.mp3|\.wav)
@@ -32,7 +29,6 @@ smartintercom_nelma5_delivery_access_link:
 smartintercom_nelma5_user_denied_link:
     name: 'Ссылка на аудио файл "Доступ запрещён"'
     icon: mdi:file-music
-    initial: "http://localhost/access_denied.wav"
     min: 2
     max: 100
     pattern: (/\w|http://).*(\.mp3|\.wav)
@@ -40,7 +36,6 @@ smartintercom_nelma5_user_denied_link:
 smartintercom_nelma5_user_access_link:
     name: 'Ссылка на аудио файл "Доступ разрешен"'
     icon: mdi:file-music
-    initial: "http://localhost/user_access_allowed.wav"
     min: 2
     max: 100
     pattern: (/\w|http://).*(\.mp3|\.wav)
@@ -50,7 +45,6 @@ smartintercom_nelma5_user_access_link:
 smartintercom_e8db849c6ee5_user_no_connect_link:
     name: 'Ссылка на аудио файл "Абонент не доступен"'
     icon: mdi:file-music
-    initial: "/user_no_connect.wav"
     min: 2
     max: 100
     pattern: (/\w|http://).*(\.mp3|\.wav)
@@ -58,7 +52,6 @@ smartintercom_e8db849c6ee5_user_no_connect_link:
 smartintercom_e8db849c6ee5_user_no_answer_link:
     name: 'Ссылка на аудио файл "Абонент не отвечает"'
     icon: mdi:file-music
-    initial: "/user_no_answer.wav"
     min: 2
     max: 100
     pattern: (/\w|http://).*(\.mp3|\.wav)
@@ -66,7 +59,6 @@ smartintercom_e8db849c6ee5_user_no_answer_link:
 smartintercom_e8db849c6ee5_delivery_access_link:
     name: 'Ссылка на аудио файл "Доступ для курьера"'
     icon: mdi:file-music
-    initial: "/delivery_access_allowed.wav"
     min: 2
     max: 100
     pattern: (/\w|http://).*(\.mp3|\.wav)
@@ -74,7 +66,6 @@ smartintercom_e8db849c6ee5_delivery_access_link:
 smartintercom_e8db849c6ee5_user_denied_link:
     name: 'Ссылка на аудио файл "Доступ запрещён"'
     icon: mdi:file-music
-    initial: "/access_denied.wav"
     min: 2
     max: 100
     pattern: (/\w|http://).*(\.mp3|\.wav)
@@ -82,7 +73,6 @@ smartintercom_e8db849c6ee5_user_denied_link:
 smartintercom_e8db849c6ee5_user_access_link:
     name: 'Ссылка на аудио файл "Доступ разрешен"'
     icon: mdi:file-music
-    initial: "/user_access_allowed.wav"
     min: 2
     max: 100
     pattern: (/\w|http://).*(\.mp3|\.wav)
