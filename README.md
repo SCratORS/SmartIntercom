@@ -27,6 +27,14 @@
 
 Добавление управления через Телеграм:
 https://github.com/SCratORS/SmartIntercom/issues/3
+https://github.com/SCratORS/SmartIntercom/issues/6
+
+Управление через Алису:
+https://github.com/SCratORS/SmartIntercom/issues/7
+https://github.com/SCratORS/SmartIntercom/issues/9
+
+Автоматическое отключение однократного открытия домофона:
+https://github.com/SCratORS/SmartIntercom/issues/8
 
 Схема устройсва и описание:
 https://easyeda.com/scrators/intercom
