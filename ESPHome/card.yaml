@@ -1,20 +1,20 @@
 type: entities
 entities:
-  - entity: sensor.smartintercom_e8db849c6ee5_line_status
+  - entity: sensor.smartintercom_line_status
     name: Домофон
     secondary_info: last-changed
-  - entity: select.smartintercom_e8db849c6ee5_modes
+  - entity: select.smartintercom_modes
     name: Режим работы
   - type: buttons
     entities:
-      - entity: switch.smartintercom_e8db849c6ee5_accept_call
+      - entity: switch.smartintercom_accept_call
         name: Открыть
-      - entity: switch.smartintercom_e8db849c6ee5_delivery
+      - entity: switch.smartintercom_delivery
         name: Курьер
-      - entity: switch.smartintercom_e8db849c6ee5_reject_call
+      - entity: switch.smartintercom_reject_call
         name: Сброс
-      - entity: switch.smartintercom_e8db849c6ee5_sound
-      - entity: switch.smartintercom_e8db849c6ee5_mute
-      - entity: switch.smartintercom_e8db849c6ee5_led
+      - entity: switch.smartintercom_sound
+      - entity: switch.smartintercom_mute
+      - entity: switch.smartintercom_led
 show_header_toggle: false
 state_color: false
