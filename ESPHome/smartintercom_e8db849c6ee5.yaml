@@ -1,5 +1,5 @@
 substitutions:
-  dev_name: smartintercom_e8db849c6ee5
+  dev_name: smartintercom
   
 #ESP8266_pinout_mapping
   base: esp12e
@@ -80,7 +80,7 @@ substitutions:
   # Переключение линии назад на трубку             а физическая трубка положена, и она будет на линии.
   # Выключение LED индикатора
   
-esphome:
+  esphome:
   name: ${dev_name}
   libraries:
     - SPI
@@ -262,7 +262,7 @@ script:
           id: led_indicator
       - if:
           condition:
-            lambda: 'return id(status_mute);' # uncomment this on 3 version devices
+            lambda: 'return id(status_mute);'
           then:
             if:
               condition:
@@ -487,7 +487,7 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: True
     filters:
-      delayed_off: $call_end_detect_delay
+      delayed_off: ${call_end_detect_delay}
     on_press:
       if:
         condition:
@@ -504,8 +504,6 @@ binary_sensor:
                 - output.turn_on: relay_switch_line
           - delay: $delay_before_switch_line
           - script.execute: state_call
-          - delay: $delay_after_close_door
-          - output.turn_off: relay_switch_line
     on_release:
       - output.turn_off: phone_down
       - output.turn_off: relay_switch_line
