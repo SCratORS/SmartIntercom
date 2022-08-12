@@ -322,29 +322,13 @@ script:
               condition:
                 switch.is_on: delivery
               then:
-                if:
-                  condition:
-                    and:
-                      - api.connected:
-                      - lambda: 'return id(delivery_access_link).state != "";'
-                  then:
-                    lambda: 'playFile(audio_player, id(delivery_access_link).state.c_str());'
-                  else:
-                    lambda: 'playFile(audio_player, "/delivery_access_allowed.wav");'
+                lambda: 'playFile(audio_player, "/delivery_access_allowed.wav");'
               else:
                 if:
                   condition:
                     lambda: 'return id(status_sound);'
                   then:
-                    if:
-                      condition:
-                        and:
-                          - api.connected:
-                          - lambda: 'return id(user_access_link).state != "";'
-                      then:
-                        lambda: 'playFile(audio_player, id(user_access_link).state.c_str());'
-                      else:
-                        lambda: 'playFile(audio_player, "/user_access_allowed.wav");'                   
+                    lambda: 'playFile(audio_player, "/user_access_allowed.wav");'                   
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
           - delay: $delay_before_open_door
@@ -354,7 +338,7 @@ script:
           - output.turn_off: open_door
           - lambda: 'id(line_status).publish_state("${line_status_reject}");'
           - delay: $delay_after_close_door
-          - output.turn_off: relay_switch_line
+          - output.turn_on: phone_down
           - lambda: 'id(line_status).publish_state("${line_status_close}");'
           - if:
               condition:
@@ -382,44 +366,20 @@ script:
                   condition:
                     lambda: 'return id(current_mode) == 2;'
                   then:
-                    if:
-                      condition:
-                        and:
-                        - api.connected:
-                        - lambda: 'return id(user_denied_link).state != "";'
-                      then:
-                        lambda: 'playFile(audio_player, id(user_denied_link).state.c_str());'
-                      else:
-                        lambda: 'playFile(audio_player, "/access_denied.wav");'                  
+                    lambda: 'playFile(audio_player, "/access_denied.wav");'                  
                   else:
                     if:
                       condition:
                         switch.is_on: reject_call
                       then:
-                        if:
-                          condition:
-                            and:
-                            - api.connected:
-                            - lambda: 'return id(user_no_connect_link).state != "";'
-                          then:
-                            lambda: 'playFile(audio_player, id(user_no_connect_link).state.c_str());'
-                          else:
-                            lambda: 'playFile(audio_player, "/user_no_connect.wav");'                    
+                        lambda: 'playFile(audio_player, "/user_no_connect.wav");'                    
                       else:
-                        if:
-                          condition:
-                            and:
-                            - api.connected:
-                            - lambda: 'return id(user_no_answer_link).state != "";'
-                          then:
-                            lambda: 'playFile(audio_player, id(user_no_answer_link).state.c_str());'
-                          else:
-                            lambda: 'playFile(audio_player, "/user_no_answer.wav");'
+                        lambda: 'playFile(audio_player, "/user_no_answer.wav");'
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
           - delay: $delay_open_on_time
           - lambda: 'id(line_status).publish_state("${line_status_reject}");'
-          - output.turn_off: relay_switch_line
+          - output.turn_on: phone_down
           - lambda: 'id(line_status).publish_state("${line_status_close}");'
           - delay: $delay_after_close_door
           - if:
@@ -512,21 +472,6 @@ text_sensor:
     mac_address:
       name: ${dev_name}_mac
       icon: "mdi:lan"
-  - platform: homeassistant
-    entity_id: input_text.${dev_name}_user_no_connect_link
-    id: user_no_connect_link
-  - platform: homeassistant
-    entity_id: input_text.${dev_name}_user_no_answer_link
-    id: user_no_answer_link
-  - platform: homeassistant
-    entity_id: input_text.${dev_name}_delivery_access_link
-    id: delivery_access_link
-  - platform: homeassistant
-    entity_id: input_text.${dev_name}_user_denied_link
-    id: user_denied_link
-  - platform: homeassistant
-    entity_id: input_text.${dev_name}_user_access_link
-    id: user_access_link
 
 sensor:
   - platform: wifi_signal
@@ -559,6 +504,8 @@ binary_sensor:
                 - output.turn_on: relay_switch_line
           - delay: $delay_before_switch_line
           - script.execute: state_call
+          - delay: $delay_after_close_door
+          - output.turn_off: relay_switch_line
     on_release:
       - output.turn_off: phone_down
       - output.turn_off: relay_switch_line
