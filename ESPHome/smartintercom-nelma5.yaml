@@ -26,7 +26,7 @@ substitutions:
   line_status_close:  "Закрыто"
   
 #delay
-  call_end_detect_delay: 3000ms     # Interval between rings to detect incoming call
+  detect_delay: 100ms     # Interval between rings to detect incoming call
   delay_before_switch_line: 1000ms  # Delay before switch line (answer activate)
   delay_before_voice: 1000ms        # Delay before play voice
   delay_before_open_door: 100ms     # Delay before open door
@@ -37,14 +37,6 @@ substitutions:
 
 esphome:
   name: ${dev_name}
-  libraries:
-    - SPI
-    - WiFi
-    - WiFiClientSecure
-    - FS
-    - ESP8266Audio
-  includes:
-    - lib/ESPAudio.h
   on_boot:
     priority: -100
     then:
@@ -52,8 +44,6 @@ esphome:
 
 esp32:
   board: ${base}
-  framework:
-    type: arduino
 
 # Enable logging
 logger:
@@ -76,10 +66,6 @@ wifi:
 
 captive_portal:
 
-custom_component:
-  - id: audio_player
-    lambda: 'return {new ESPAudio()};'
-
 globals:
   - id: current_mode
     type: int
@@ -100,6 +86,13 @@ globals:
     type: int
     initial_value: '0'   
     
+media_player:
+  - platform: i2s_audio
+    name: audio_player
+    internal: true
+    dac_type: internal
+    mode: right
+
 light:
   - platform: status_led
     id: led_status
@@ -206,7 +199,7 @@ script:
           id: led_indicator
       - if:
           condition:
-            lambda: 'return id(status_mute);' # uncomment this on 3 version devices
+            lambda: 'return id(status_mute);'
           then:
             if:
               condition:
@@ -266,15 +259,15 @@ script:
               condition:
                 switch.is_on: delivery
               then:
-                lambda: 'playFile(audio_player, id(delivery_access_link).state.c_str());'
+                media_player.play_media: !lambda 'return id(delivery_access_link).state.c_str();'
               else:
                 if:
                   condition:
                     lambda: 'return id(status_sound);'
                   then:
-                    lambda: 'playFile(audio_player, id(user_access_link).state.c_str());'
+                    media_player.play_media: !lambda 'return id(user_access_link).state.c_str();'
           - wait_until:
-              lambda: 'return !isPlaying(audio_player);'
+              media_player.is_idle:
           - delay: $delay_before_open_door
           - output.turn_on: open_door
           - lambda: 'id(line_status).publish_state("${line_status_open}");'
@@ -282,7 +275,11 @@ script:
           - output.turn_off: open_door
           - lambda: 'id(line_status).publish_state("${line_status_reject}");'
           - delay: $delay_after_close_door
-          - output.turn_off: relay_switch_line
+          - if:
+              condition:
+                lambda: 'return id(status_line);'
+              then:
+                output.turn_on: phone_down
           - lambda: 'id(line_status).publish_state("${line_status_close}");'
           - if:
               condition:
@@ -310,20 +307,24 @@ script:
                   condition:
                     lambda: 'return id(current_mode) == 2;'
                   then:
-                    lambda: 'playFile(audio_player, id(user_denied_link).state.c_str());'
+                    media_player.play_media: !lambda 'return id(user_denied_link).state.c_str();'
                   else:
                     if:
                       condition:
                         switch.is_on: reject_call
                       then:
-                        lambda: 'playFile(audio_player, id(user_no_connect_link).state.c_str());'
+                        media_player.play_media: !lambda 'return id(user_no_connect_link).state.c_str();'
                       else:
-                        lambda: 'playFile(audio_player, id(user_no_answer_link).state.c_str());'
+                        media_player.play_media: !lambda 'return id(user_no_answer_link).state.c_str();'
           - wait_until:
-              lambda: 'return !isPlaying(audio_player);'
+              media_player.is_idle:
           - delay: $delay_open_on_time
           - lambda: 'id(line_status).publish_state("${line_status_reject}");'
-          - output.turn_off: relay_switch_line
+          - if:
+              condition:
+                lambda: 'return id(status_line);'
+              then:
+                output.turn_on: phone_down
           - lambda: 'id(line_status).publish_state("${line_status_close}");'
           - delay: $delay_after_close_door
           - if:
@@ -445,8 +446,8 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: true
     filters:
-      - delayed_off: $call_end_detect_delay
-      - delayed_on: 100ms
+      - delayed_off: $detect_delay
+      - delayed_on: $detect_delay
     on_press:
       if:
         condition:
