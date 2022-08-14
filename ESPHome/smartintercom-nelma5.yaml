@@ -2,7 +2,7 @@ substitutions:
   dev_name: smartintercom_nelma5
   api_passwd: "12345678"
 
-#ESP8266_pinout_mapping
+#ESP32_pinout_mapping
   base: esp32dev
   led_status: GPIO16             # Internal led on esp module
   led_indicator: GPIO13         # External led indicator
