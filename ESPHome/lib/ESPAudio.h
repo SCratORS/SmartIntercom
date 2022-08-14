@@ -1,14 +1,7 @@
 #include "esphome.h"
-#ifdef ESP32
-    #include "FS.h"
-    #include "SPIFFS.h"
-    #include "AudioFileSourceSPIFFS.h"
-    #include "AudioOutputI2S.h"
-#else
-    #include "LittleFS.h"
-    #include "AudioFileSourceLittleFS.h"
-    #include "AudioOutputI2SNoDAC.h"
- #endif
+#include "LittleFS.h"
+#include "AudioFileSourceLittleFS.h"
+#include "AudioOutputI2SNoDAC.h"
 
 #include "AudioGeneratorMP3.h"
 #include "AudioGeneratorWAV.h"
@@ -39,15 +32,8 @@ class ESPAudio : public Component {
     private:
         AudioGeneratorMP3 *mp3;  
         AudioGeneratorWAV *wav;
-        
-        #ifdef ESP32
-            AudioFileSourceSPIFFS *file;
-            AudioOutputI2S *out;
-        #else
-            AudioFileSourceLittleFS *file;
-            AudioOutputI2SNoDAC *out;
-        #endif
-        
+        AudioFileSourceLittleFS *file;
+        AudioOutputI2SNoDAC *out;       
         AudioFileSourceHTTPStream *stream;
         AudioFileSourceBuffer *buff;
 
@@ -59,27 +45,16 @@ class ESPAudio : public Component {
             delete(this->out); this->out=NULL;
             delete(this->file); this->file=NULL;
             delete(this->buff); this->buff=NULL;
-            delete(this->stream); this->stream=NULL;
-            
-        #ifdef ESP8266
+            delete(this->stream); this->stream=NULL;            
             pinMode(I2SO_DATA, OUTPUT);
-        #endif
-        
             DEBUGa("Stopped playing");
         }
         
         bool play_prepare(const char* fileName) {
-            #ifdef ESP32
-                this->out = new AudioOutputI2S(0, 1);
-                this->out->RegisterStatusCB(statusCBFn, (void *) "AudioOutputI2S");
-                this->file = new AudioFileSourceSPIFFS(fileName);
-                this->file->RegisterStatusCB(statusCBFn, (void *) "AudioFileSourceSPIFFS");
-            #else
-                this->out = new AudioOutputI2SNoDAC();
-                this->out->RegisterStatusCB(statusCBFn, (void *) "AudioOutputI2SNoDAC");
-                this->file = new AudioFileSourceLittleFS(fileName);
-                this->file->RegisterStatusCB(statusCBFn, (void *) "AudioFileSourceLittleFS");
-            #endif
+            this->out = new AudioOutputI2SNoDAC();
+            this->out->RegisterStatusCB(statusCBFn, (void *) "AudioOutputI2SNoDAC");
+            this->file = new AudioFileSourceLittleFS(fileName);
+            this->file->RegisterStatusCB(statusCBFn, (void *) "AudioFileSourceLittleFS");
             if (!this->file) {
                 DEBUGa("Can't open audio file %s", fileName);
                 return false;
@@ -109,16 +84,9 @@ class ESPAudio : public Component {
                 return false;
             }
             this->buff = new AudioFileSourceBuffer(this->stream, 2048);
-            this->buff->RegisterStatusCB(statusCBFn, (void *) "AudioFileSourceBuffer");
-            
-            #ifdef ESP32
-                this->out = new AudioOutputI2S(0, 1);
-                this->out->RegisterStatusCB(statusCBFn, (void *) "AudioOutputI2S");
-            #else
-                this->out = new AudioOutputI2SNoDAC();
-                this->out->RegisterStatusCB(statusCBFn, (void *) "AudioOutputI2SNoDAC");
-            #endif
-            
+            this->buff->RegisterStatusCB(statusCBFn, (void *) "AudioFileSourceBuffer");  
+            this->out = new AudioOutputI2SNoDAC();
+            this->out->RegisterStatusCB(statusCBFn, (void *) "AudioOutputI2SNoDAC");
             return true;
         }
 
@@ -147,11 +115,7 @@ class ESPAudio : public Component {
         ESPAudio() : mp3(NULL), wav(NULL), file(NULL), out(NULL), stream(NULL), buff(NULL)  {}
 
         void setup() override {
-        #ifdef ESP32
-            if (!SPIFFS.begin()) DEBUGa ("SPIFFS could not be opened! Budet panika pri play audio files!");
-        #else
             if (!LittleFS.begin()) DEBUGa ("LITTLEFS could not be opened! Budet panika pri play audio files!");
-        #endif
          }
         
         void loop() override {
