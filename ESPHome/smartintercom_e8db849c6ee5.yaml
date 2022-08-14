@@ -25,7 +25,7 @@ substitutions:
   line_status_close:  "Закрыто"
   
 #delay
-  call_end_detect_delay: 3000ms     # Интервал между детектированием вызова
+  detect_delay: 100ms               # Интервал между детектированием вызова
   delay_before_switch_line: 1000ms  # Отпределили вызов, *** подождали ***... Передаем управление на плату, отключаем трубку.
   delay_before_voice: 1000ms        # Плата получила управление, *** подождали *** ... воспроизводим аудио, если надо.
   delay_before_open_door: 100ms     # Воспроизведение аудио закончилось, *** подождали *** ... нажимаем кнопку открытия двери.
@@ -140,9 +140,6 @@ globals:
   - id: status_once_mode
     type: int
     initial_value: '0'
-  - id: status_api
-    type: bool
-    initial_value: 'false'
 
 # Enable Home Assistant API
 api:
@@ -338,7 +335,11 @@ script:
           - output.turn_off: open_door
           - lambda: 'id(line_status).publish_state("${line_status_reject}");'
           - delay: $delay_after_close_door
-          - output.turn_on: phone_down
+          - if:
+              condition:
+                lambda: 'return id(status_line);'
+              then:
+                output.turn_on: phone_down
           - lambda: 'id(line_status).publish_state("${line_status_close}");'
           - if:
               condition:
@@ -379,7 +380,11 @@ script:
               lambda: 'return !isPlaying(audio_player);'
           - delay: $delay_open_on_time
           - lambda: 'id(line_status).publish_state("${line_status_reject}");'
-          - output.turn_on: phone_down
+          - if:
+              condition:
+                lambda: 'return id(status_line);'
+              then:
+                output.turn_on: phone_down
           - lambda: 'id(line_status).publish_state("${line_status_close}");'
           - delay: $delay_after_close_door
           - if:
@@ -487,7 +492,8 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: True
     filters:
-      delayed_off: ${call_end_detect_delay}
+      - delayed_off: ${detect_delay}
+      - delayed_on: ${detect_delay}
     on_press:
       if:
         condition:
