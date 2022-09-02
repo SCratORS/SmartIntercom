@@ -80,7 +80,7 @@ substitutions:
   # Переключение линии назад на трубку             а физическая трубка положена, и она будет на линии.
   # Выключение LED индикатора
   
-  esphome:
+esphome:
   name: ${dev_name}
   libraries:
     - SPI
