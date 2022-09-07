@@ -20,11 +20,11 @@ void statusCBFn(void *cbData, int code, const char *message) {
         DEBUGa("'%s': code:%d statusCBFn: %s", (char *) cbData, code, message);
 }
 
-#define get_component(constructor) static_cast<ESPAudio *> \
+#define get_audio_component(constructor) static_cast<ESPAudio *> \
   (const_cast<custom_component::CustomComponentConstructor *>(&constructor)->get_component(0))
 
-#define playFile(audioComponent, fname) get_component(audioComponent)->play_file(fname)
-#define isPlaying(audioComponent) get_component(audioComponent)->isPlay()
+#define playFile(audioComponent, fname) get_audio_component(audioComponent)->play_file(fname)
+#define isPlaying(audioComponent) get_audio_component(audioComponent)->isPlay()
 
 #define I2SO_DATA 2
 
