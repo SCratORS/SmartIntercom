@@ -3,13 +3,13 @@ substitutions:
   
 #ESP8266_pinout_mapping
   base: esp12e
-  led_status: GPIO2             # Индикатор статуса API, GPIO2 - это встроенный синий светодиод на ESP12
-  led_indicator: GPIO13         # Дополнительный индикатор, который будет показывать режимы и прочее.
-  detect_line: GPIO12           # Пин детектора вызова
-  button_boot: GPIO0            # Кнопка, можно оставить на GPIO0 - будет еще и в режим прошивки переводить
-  relay_line: GPIO14            # Пин "Переключение линии, плата/трубка"
-  switch_open: GPIO5            # Пин "Открытие двери"
-  switch_phone: GPIO4           # Пин "Трубка положена/поднята"
+  led_status: GPIO2             # Internal led on esp module
+  led_indicator: GPIO13         # External led indicator
+  detect_line: GPIO12           # Line ring detector
+  button_boot: GPIO0            # Boot button
+  relay_line: GPIO14            # Relay selector phone - emulation
+  switch_open: GPIO5            # Open door emulation
+  switch_phone: GPIO4           # Down/Up phone emulation
   
 #input_select_mode_value
   input_select_disable: "Не активен"
@@ -25,60 +25,13 @@ substitutions:
   line_status_close:  "Закрыто"
   
 #delay
-  call_end_detect_delay: 3000ms     # Интервал между детектированием вызова
-  delay_before_switch_line: 1000ms  # Отпределили вызов, *** подождали ***... Передаем управление на плату, отключаем трубку.
-  delay_before_voice: 1000ms        # Плата получила управление, *** подождали *** ... воспроизводим аудио, если надо.
-  delay_before_open_door: 100ms     # Воспроизведение аудио закончилось, *** подождали *** ... нажимаем кнопку открытия двери.
-  delay_open_on_time: 600ms         # Кнопка открытия двери нажата, *** подождали *** ... отпустили кнопку.
-  delay_after_close_door: 2000ms    # Отпустили кнопку открытия двери, *** подождали *** ... Возвращаем управление на трубку
-  delay_no_answer: 30s              # Пауза для режима "Сброс если нет ответа" - сколько этот ответ плата ждёт
-
-  # Логика работы:
-  # 
-  # Определение "Вызова", интеревал между детектированием - call_end_detect_delay (3 сек.)
-  # Включение LED индикатора в режим быстрого мигания.
-  #
-  # +-----------Если включен режим MUTE-----------+ Это позволяет при вызове быстро передать управление
-  # | Включение на плате режима "трубка положена" | на плату, и трубка не успевает издать звук вызова.
-  # | Переключение управления на плату            | При этом на плате устанавливается режим положеной
-  # +---------------------------------------------+ трубки, поэтому на блоке вызова просто идет вызов.
-  #
-  # delay_before_switch_line: (1000 мсек.)          Ждем, чтобы "желательно" попасть в паузу между
-  #                                                 вызовными сигналами, заодно чтобы блок вызова
-  #                                                 успел перейти в режим работы с абонентом, - малоли.
-  #
-  # +---Если режим "сброс, если нет ответа"-------+ Если установлен этот режим, то просто ждем 30 сек.
-  # | delay_no_answer (30 сек)                    | и запускаем скрипт сброса звонка.
-  # | Включение режима "сброс"                    |
-  # +---------------------------------------------+        
-  #
-  # +---Если включен какой-нибудь режим работы----+ Если выбран какой-либо режим кроме "Неактивен",
-  # | Переключение управления на плату            | то начинаем работу по отработке вызова.
-  # | "Поднимаем трубку"                          | Делаем поднятие трубки, малоли был режим мьюта.
-  # | delay_before_voice (1000 мсек.)             | Ждем, чтобы блок вызова успел отработать поднятие
-  # |                                             | трубки, и дать работу с аудио трактом.
-  # | +--Если режим курьера или аудио включено--+ | Если режим курьера или включено аудио сообщение,
-  # | | Воспроизведение аудио                   | | то собственно воспроизводим аудио, и ждем окончания
-  # | +-----------------------------------------+ | воспроизведения
-  # |                                             |
-  # | +--Если открывающий режим-----------------+ | Открывающий режим - разовый/постоянный или "курьер"
-  # | | delay_before_open_door (100 мсек.)      | | Ждем немного, чтобы с аудио, которое воспроизводилось
-  # | | Нажатие кнопки открытия двери.          | | на блоке вызова не обрывало. И жмём "Открыть"
-  # | +-----------------------------------------+ |
-  # |                                             | 
-  # | delay_open_on_time (600 мсек.)              | Ждем, чтобы блок вызова успел переварить сигналы.
-  # | Отпускание кнопки открытия двери.           | Отпускаем кнопку открытия, если не была нажата - 
-  # | delay_after_close_door (2000 мсек.)         | ну и пофиг. Ждем, перед сбросом. Если не ждать, 
-  # | Переключаем линию назад на трубку           | то может детектор отработать еще раз, и будет 
-  # +---------------------------------------------+ по кругу гонять, пока на блоке вызова сброс не нажмут.
-  #                                                 Переключаем линию на трубку, а она у нас положена,
-  #                                                 и поэтому блок вызова отпеределяет это как
-  #                                                 положили трубку и завершает сеанс вызова.
-  #
-  # Ожидание окончания связи с блоком вызова          
-  # Выключение режима "положенной трубки"          Выключение GPIO, чтобы энергию не кушал,
-  # Переключение линии назад на трубку             а физическая трубка положена, и она будет на линии.
-  # Выключение LED индикатора
+  call_end_detect_delay: 3000ms     # Interval between rings to detect incoming call
+  delay_before_switch_line: 1000ms  # Delay before switch line (answer activate)
+  delay_before_voice: 1000ms        # Delay before play voice
+  delay_before_open_door: 100ms     # Delay before open door
+  delay_open_on_time: 600ms         # How long the "open door button" will be pressed
+  delay_after_close_door: 2000ms    # Delay after close door
+  delay_no_answer: 30s              # Delay if no answer
   
 esphome:
   name: ${dev_name}
@@ -99,7 +52,7 @@ esphome:
       board_build.f_cpu: 160000000L
       board_build.filesystem: littlefs
       board_build.ldscript: eagle.flash.4m2m.ld
-      build_flags: -D PIO_FRAMEWORK_ARDUINO_LWIP2_HIGHER_BANDWIDTH
+      build_flags: -D PIO_FRAMEWORK_ARDUINO_LWIP2_HIGHER_BANDWIDTH -DMMU_IRAM_SIZE=0xC000 -DMMU_ICACHE_SIZE=0x4000 -DMMU_IRAM_HEAP
   on_boot:
     priority: -100
     then:
@@ -335,11 +288,7 @@ script:
           - output.turn_off: open_door
           - lambda: 'id(line_status).publish_state("${line_status_reject}");'
           - delay: $delay_after_close_door
-          - if:
-              condition:
-                lambda: 'return id(status_line);'
-              then:
-                output.turn_on: phone_down
+          - output.turn_on: phone_down
           - lambda: 'id(line_status).publish_state("${line_status_close}");'
           - if:
               condition:
@@ -380,11 +329,7 @@ script:
               lambda: 'return !isPlaying(audio_player);'
           - delay: $delay_open_on_time
           - lambda: 'id(line_status).publish_state("${line_status_reject}");'
-          - if:
-              condition:
-                lambda: 'return id(status_line);'
-              then:
-                output.turn_on: phone_down
+          - output.turn_on: phone_down
           - lambda: 'id(line_status).publish_state("${line_status_close}");'
           - delay: $delay_after_close_door
           - if:
@@ -482,7 +427,14 @@ sensor:
   - platform: wifi_signal
     name: ${dev_name}_rssi
     update_interval: 600s
-
+  - platform: template
+    name: ${dev_name}_heap
+    lambda: "return ESP.getFreeHeap();"
+    update_interval: 20s
+    unit_of_measurement: bytes
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    
 binary_sensor:
   - platform: gpio
     id: line_detect
@@ -510,8 +462,15 @@ binary_sensor:
           - delay: $delay_before_switch_line
           - script.execute: state_call
     on_release:
-      - output.turn_off: phone_down
-      - output.turn_off: relay_switch_line
+      - if:
+          condition:
+            switch.is_on: phone_off
+          then:
+            - output.turn_on: phone_down
+            - output.turn_on: relay_switch_line
+          else:
+            - output.turn_off: phone_down
+            - output.turn_off: relay_switch_line
       - lambda: 'id(status_line) = false;'
       - logger.log: "Incoming call completed"
       - script.execute: led_off
@@ -564,10 +523,11 @@ output:
       number: $switch_phone
       mode: OUTPUT
 
-switch:
+button:
   - platform: restart
     name: ${dev_name}_restart
 
+switch:
   - platform: template
     name: ${dev_name}_delivery
     id: delivery
@@ -691,6 +651,31 @@ switch:
           then:
               script.execute: led_off
               
+  - platform: template
+    name: ${dev_name}_phone_off
+    id: phone_off
+    icon: "mdi:phone-off"
+    turn_on_action:
+      - switch.template.publish:
+          id: phone_off
+          state: true
+      - if:
+          condition:
+            lambda: 'return id(status_line) == false;'
+          then:
+            - output.turn_on: phone_down
+            - output.turn_on: relay_switch_line
+    turn_off_action:
+      - switch.template.publish:
+          id: phone_off
+          state: false
+      - if:
+          condition:
+            lambda: 'return id(status_line) == false;'
+          then:
+            - output.turn_off: phone_down
+            - output.turn_off: relay_switch_line   
+            
   - platform: template
     name: ${dev_name}_led
     id: led
