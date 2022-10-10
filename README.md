@@ -36,6 +36,9 @@ https://github.com/SCratORS/SmartIntercom/issues/9
 Автоматическое отключение однократного открытия домофона:
 https://github.com/SCratORS/SmartIntercom/issues/8
 
+"Афтар! Чо так сложно?! А можно проще?" - Можно проще, идём сюда:
+https://wiki.smartintercom.ru/ru/home
+
 Схема устройсва и описание:
 https://easyeda.com/scrators/intercom
 
