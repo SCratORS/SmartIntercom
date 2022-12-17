@@ -41,7 +41,7 @@ esphome:
     - FS
     - WiFi
     - WiFiClientSecure
-    - ESP8266Audio@1.9.6
+    - ESP8266Audio
   includes:
     - lib/ESPAudio.h
   platformio_options:
