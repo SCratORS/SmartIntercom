@@ -1,20 +1,21 @@
-#define FS_NO_GLOBALS
-#define SDCARD
-
 #include "esphome.h"
 
 #ifdef ESP32
-    #include "FS.h"
-    #include "AudioOutputI2S.h"
-
-    #ifdef SDCARD
-        #include "SD.h"
-        #include "AudioFileSourceSD.h"
+    #ifdef USE_ESP32_VARIANT_ESP32C3
+        #include "LittleFS.h"
+        #include "AudioFileSourceLittleFS.h"
+        #include "AudioOutputI2SNoDAC.h"
     #else
-        #include "SPIFFS.h"
-        #include "AudioFileSourceSPIFFS.h"
+        #include "FS.h"
+        #include "AudioOutputI2S.h"
+        #ifdef SDCARD
+            #include "SD.h"
+            #include "AudioFileSourceSD.h"
+        #else
+            #include "SPIFFS.h"
+            #include "AudioFileSourceSPIFFS.h"
+        #endif
     #endif
-
 #else
     #include "LittleFS.h"
     #include "AudioFileSourceLittleFS.h"
@@ -26,12 +27,14 @@
 #include "AudioFileSourceHTTPStream.h"
 #include "AudioFileSourceBuffer.h"
 
+
 #define DEBUGa(format, ...) ESP_LOGD("audio", format "\n", ##__VA_ARGS__)
 
 #define get_audio_component(constructor) static_cast<ESPAudio *> \
   (const_cast<custom_component::CustomComponentConstructor *>(&constructor)->get_component(0))
 
 #define playFile(audioComponent, fname) get_audio_component(audioComponent)->play_file(fname)
+#define stopFile(audioComponent) get_audio_component(audioComponent)->stop_file()
 #define isPlaying(audioComponent) get_audio_component(audioComponent)->isPlay()
 
 #define I2SO_DATA 2
@@ -43,13 +46,17 @@ class ESPAudio : public Component {
         bool sd_init = false;
         
         #ifdef ESP32
-            
-            #ifdef SDCARD
-                AudioFileSourceSD *file = NULL;
+            #ifdef USE_ESP32_VARIANT_ESP32C3
+                AudioFileSourceLittleFS *file = NULL;
+                AudioOutputI2SNoDAC *out = NULL;
             #else
-                AudioFileSourceSPIFFS *file = NULL;
+                #ifdef SDCARD
+                    AudioFileSourceSD *file = NULL;
+                #else
+                    AudioFileSourceSPIFFS *file = NULL;
+                #endif
+                AudioOutputI2S *out = NULL;
             #endif
-            AudioOutputI2S *out = NULL;
         #else
             AudioFileSourceLittleFS *file = NULL;
             AudioOutputI2SNoDAC *out = NULL;
@@ -77,17 +84,22 @@ class ESPAudio : public Component {
         
         bool play_prepare(const char* fileName) {
             #ifdef ESP32
-                this->out = new AudioOutputI2S(0, 1);
-                #ifdef SDCARD
-                    if (!sd_init && !SD.begin()) {
-                        DEBUGa ("SD could not be opened!");
-                        return false;
-                    } else {
-                        sd_init = true;
-                        this->file = new AudioFileSourceSD(fileName);
-                    }
+                #ifdef USE_ESP32_VARIANT_ESP32C3
+                    this->out = new AudioOutputI2SNoDAC();
+                    this->file = new AudioFileSourceLittleFS(fileName);
                 #else
-                    this->file = new AudioFileSourceSPIFFS(fileName);
+                    this->out = new AudioOutputI2S(0, 1);
+                    #ifdef SDCARD
+                        if (!sd_init && !SD.begin()) {
+                            DEBUGa ("SD could not be opened!");
+                            return false;
+                        } else {
+                            sd_init = true;
+                            this->file = new AudioFileSourceSD(fileName);
+                        }
+                    #else
+                        this->file = new AudioFileSourceSPIFFS(fileName);
+                    #endif
                 #endif
             #else
                 this->out = new AudioOutputI2SNoDAC();
@@ -114,7 +126,11 @@ class ESPAudio : public Component {
 
         bool stream_prepare(const char* URL) {
             #ifdef ESP32
-                this->out = new AudioOutputI2S(0, 1);
+                #ifdef USE_ESP32_VARIANT_ESP32C3
+                    this->out = new AudioOutputI2SNoDAC();
+                #else
+                    this->out = new AudioOutputI2S(0, 1);
+                #endif
             #else
                 this->out = new AudioOutputI2SNoDAC();
             #endif
@@ -152,9 +168,13 @@ class ESPAudio : public Component {
         void setup() override {
             
         #ifdef ESP32
-            #ifdef SDCARD
+            #ifdef USE_ESP32_VARIANT_ESP32C3
+                if (!LittleFS.begin()) DEBUGa ("LITTLEFS could not be opened! Budet panika pri play audio files!");
             #else
-                if (!SPIFFS.begin()) DEBUGa ("SPIFFS could not be opened! Budet panika pri play audio files!");
+                #ifdef SDCARD
+                #else
+                    if (!SPIFFS.begin()) DEBUGa ("SPIFFS could not be opened! Budet panika pri play audio files!");
+                #endif
             #endif
         #else
             if (!LittleFS.begin()) DEBUGa ("LITTLEFS could not be opened! Budet panika pri play audio files!");
@@ -168,6 +188,11 @@ class ESPAudio : public Component {
             if (this->mp3 && this->mp3->isRunning()) {
                 if (!this->mp3->loop()) stop();
             }
+        }
+
+        void stop_file() {
+            if (this->wav && this->wav->isRunning()) stop();
+            if (this->mp3 && this->mp3->isRunning()) stop();
         }
     
         void play_file(const char* fName) {
