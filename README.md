@@ -21,9 +21,9 @@
 При использовании ESPHome (напримере HomeAssistans)
 1. Установить из магазина дополнений "ESPHome" и "FileEditor"
 2. Запустить дополнение FileEditor и перейти к рабочий каталог /сonfig/esphome/
-3. Используя меню "File Upload" загрузить файл smartintercom_e8db849c6ee5.yaml из проекта (находится в папке ESPHome)
+3. Используя меню "File Upload" загрузить файл [smartintercom_e8db849c6ee5.yaml](ESPHome/smartintercom_e8db849c6ee5.yaml)
 4. Используя меню "Create Folder" создать папку lib и перейти в неё
-5. Используя меню "File Upload" загрузить файлы  библиотек "ESPAudio.h" и "ESPFtp.h" из проекта (находятся в папке ESPHome/lib)
+5. Используя меню "File Upload" загрузить файлы библиотек [ESPAudio.h](ESPHome/lib/ESPAudio.h) и [ESPFtp.h](ESPHome/lib/ESPFtp.h)
 6. Запустить дополнение ESPHome, - там появится проект "smartintercom" в статусе OFFLINE
 7. Для того чтобы статус устройства стал ONLINE, проект должен быть скомпилирован.
 8. Нажать на проекте "...", выбрать меню "INSTALL", выбрать способ прошивки (просто для компиляции можно выбрать "Manual Download - Modern Format"). Во время компиляции все необходимые библиотеки ESPHome загрузит сам
@@ -31,8 +31,8 @@
 10. По желанию добавить карточку устройства на панель lovalace из файла card.yaml проекта. ![](images/card.png)
 
 При использовании ESP Download Tools (ESP8266)
-1. /bin/smartintercom.bin - Прошивать в адрес 0x0
-2. /bin/mklittlefs_0x200000.bin - Прошивать в адрес 0x200000
+1. [smartintercom.bin](bin/smartintercom.bin) - Прошивать в адрес 0x0
+2. [mklittlefs_0x200000.bin](bin/mklittlefs_0x200000.bin) - Прошивать в адрес 0x200000
 
 Добавление управления через Телеграм:
 https://github.com/SCratORS/SmartIntercom/issues/3
