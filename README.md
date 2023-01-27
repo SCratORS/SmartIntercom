@@ -18,7 +18,7 @@
 5. Загрузить файлы из data в LittleFS https://arduino-esp8266.readthedocs.io/en/latest/filesystem.html
 6. Прошить МК.
 
-При использовании ESPHome (на примере HomeAssistans)
+При использовании ESPHome (на примере HomeAssistant)
 1. Установить из магазина дополнений "ESPHome" и "FileEditor"
 2. Запустить дополнение FileEditor и перейти к рабочий каталог /сonfig/esphome/
 3. Используя меню "File Upload" загрузить файл [smartintercom_e8db849c6ee5.yaml](ESPHome/smartintercom_e8db849c6ee5.yaml)
