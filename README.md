@@ -28,7 +28,7 @@
 7. Для того чтобы статус устройства стал ONLINE, проект должен быть скомпилирован.
 8. Нажать на проекте "...", выбрать меню "INSTALL", выбрать способ прошивки (просто для компиляции можно выбрать "Manual Download - Modern Format"). Во время компиляции все необходимые библиотеки ESPHome загрузит сам
 9. После успешной прошивки, и выхода устройства в Онлайн, нужно загрузить аудио файлы, для этого подключаемся к плате по FTP (пассивный режим, анонимное соединение без пароля), и копируем файлы из папки [data](data/) в корень FTP
-10. По желанию добавить карточку устройства на панель lovalace из файла card.yaml проекта. ![](images/card.png)
+10. По желанию добавить карточку устройства на панель lovalace из файла [card.yaml](ESPHome/card.yaml) проекта. ![](images/card.png)
 
 При использовании ESP Download Tools (ESP8266)
 1. [smartintercom.bin](bin/smartintercom.bin) - Прошивать в адрес 0x0
@@ -49,7 +49,7 @@ https://github.com/SCratORS/SmartIntercom/issues/8
 https://wiki.smartintercom.ru/ru/home
 
 Схема устройсва и описание:
-https://easyeda.com/scrators/intercom
+https://oshwlab.com/scrators/intercom-v4b
 
 Телеграм канал для обсуждения:
 https://t.me/smartintercom
