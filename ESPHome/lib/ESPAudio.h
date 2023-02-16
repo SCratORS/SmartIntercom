@@ -1,216 +1,212 @@
 #include "esphome.h"
 
-#ifdef ESP32
-    #ifdef USE_ESP32_VARIANT_ESP32C3
-        #include "LittleFS.h"
-        #include "AudioFileSourceLittleFS.h"
-        #include "AudioOutputI2SNoDAC.h"
+#if defined(ESP32) && !defined(USE_ESP32_VARIANT_ESP32C3)
+    #include "FS.h"
+    #include "AudioOutputI2S.h"
+    #define aAudioOutput() AudioOutputI2S(0, 1/*INTERNAL_DAC*/)
+    #ifdef SDCARD
+        #include "SD.h"
+        #include "AudioFileSourceSD.h"
+        #define aFS SD
+        #define aFS_STR "SD";
+        using aAudioFileSource = AudioFileSourceSD;
     #else
-        #include "FS.h"
-        #include "AudioOutputI2S.h"
-        #ifdef SDCARD
-            #include "SD.h"
-            #include "AudioFileSourceSD.h"
-        #else
-            #include "SPIFFS.h"
-            #include "AudioFileSourceSPIFFS.h"
-        #endif
+        #include "SPIFFS.h"
+        #include "AudioFileSourceSPIFFS.h"
+        #define aFS SPIFFS
+        #define aFS_STR "SPIFFS"
+        using aAudioFileSource = AudioFileSourceSPIFFS;
     #endif
 #else
     #include "LittleFS.h"
     #include "AudioFileSourceLittleFS.h"
     #include "AudioOutputI2SNoDAC.h"
+
+    #define aAudioOutput() AudioOutputI2SNoDAC()
+    #define aFS LittleFS
+    #define aFS_STR "LittleFS"
+    using aAudioFileSource = AudioFileSourceLittleFS;
 #endif
 
 #include "AudioGeneratorMP3.h"
 #include "AudioGeneratorWAV.h"
 #include "AudioFileSourceHTTPStream.h"
 #include "AudioFileSourceBuffer.h"
+#include "AudioFileSourcePROGMEM.h"
 
-
-#define DEBUGa(format, ...) ESP_LOGD("audio", format "\n", ##__VA_ARGS__)
+#define DEBUGa(format, ...) ESP_LOGD("audio", format, ##__VA_ARGS__)
 
 #define get_audio_component(constructor) static_cast<ESPAudio *> \
   (const_cast<custom_component::CustomComponentConstructor *>(&constructor)->get_component(0))
 
-#define playFile(audioComponent, fname) get_audio_component(audioComponent)->play_file(fname)
-#define stopFile(audioComponent) get_audio_component(audioComponent)->stop_file()
-#define isPlaying(audioComponent) get_audio_component(audioComponent)->isPlay()
+#define playFile(audioComponent, fname) get_audio_component(audioComponent)->play(fname)
+#define playData(audioComponent, data) get_audio_component(audioComponent)->play_data(data, sizeof(data), ESPAudio::MP3)
+#define stopFile(audioComponent) get_audio_component(audioComponent)->stop()
+#define isPlaying(audioComponent) get_audio_component(audioComponent)->is_playing()
 
 #define I2SO_DATA 2
 
 class ESPAudio : public Component {
-    private:
-        AudioGeneratorMP3 *mp3 = NULL;  
-        AudioGeneratorWAV *wav = NULL;
-        bool sd_init = false;
-        
-        #ifdef ESP32
-            #ifdef USE_ESP32_VARIANT_ESP32C3
-                AudioFileSourceLittleFS *file = NULL;
-                AudioOutputI2SNoDAC *out = NULL;
-            #else
-                #ifdef SDCARD
-                    AudioFileSourceSD *file = NULL;
-                #else
-                    AudioFileSourceSPIFFS *file = NULL;
-                #endif
-                AudioOutputI2S *out = NULL;
-            #endif
-        #else
-            AudioFileSourceLittleFS *file = NULL;
-            AudioOutputI2SNoDAC *out = NULL;
-        #endif
-        
-        AudioFileSourceHTTPStream *stream = NULL;
-        AudioFileSourceBuffer *buff = NULL;
+public:
+    enum GeneratorType {WAV, MP3, UNK};
 
-        void stop () {
-            if (this->wav) this->wav->stop();
-            if (this->mp3) this->mp3->stop();
-            if (this->file) this->file->close();
-            delete(this->wav); this->wav=NULL;
-            delete(this->out); this->out=NULL;
-            delete(this->file); this->file=NULL;
-            delete(this->buff); this->buff=NULL;
-            delete(this->stream); this->stream=NULL;
-            
-        #ifdef ESP8266
-            pinMode(I2SO_DATA, OUTPUT);
-        #endif
-        
-            DEBUGa("Stopped playing");
-        }
-        
-        bool play_prepare(const char* fileName) {
-            #ifdef ESP32
-                #ifdef USE_ESP32_VARIANT_ESP32C3
-                    this->out = new AudioOutputI2SNoDAC();
-                    this->file = new AudioFileSourceLittleFS(fileName);
-                #else
-                    this->out = new AudioOutputI2S(0, 1);
-                    #ifdef SDCARD
-                        if (!sd_init && !SD.begin()) {
-                            DEBUGa ("SD could not be opened!");
-                            return false;
-                        } else {
-                            sd_init = true;
-                            this->file = new AudioFileSourceSD(fileName);
-                        }
-                    #else
-                        this->file = new AudioFileSourceSPIFFS(fileName);
-                    #endif
-                #endif
-            #else
-                this->out = new AudioOutputI2SNoDAC();
-                this->file = new AudioFileSourceLittleFS(fileName);
-            #endif
-            if (!this->file) {
-                DEBUGa("Can't open audio file %s", fileName);
-                return false;
-            }
-            return true;
-        }
+    void setup() override {
+        this->fs_initialized_ = aFS.begin();
+    }
 
-        bool start_file_wav(const char* fileName) {
-            if (!play_prepare(fileName)) return false;  
-            this->wav = new AudioGeneratorWAV();
-            return(this->wav->begin(this->file, this->out));
-        }
-
-        bool start_file_mp3(const char* fileName) {
-            if (!play_prepare(fileName)) return false;
-            this->mp3 = new AudioGeneratorMP3();
-            return(this->mp3->begin(this->file, this->out));
-        }
-
-        bool stream_prepare(const char* URL) {
-            #ifdef ESP32
-                #ifdef USE_ESP32_VARIANT_ESP32C3
-                    this->out = new AudioOutputI2SNoDAC();
-                #else
-                    this->out = new AudioOutputI2S(0, 1);
-                #endif
-            #else
-                this->out = new AudioOutputI2SNoDAC();
-            #endif
-            this->stream = new AudioFileSourceHTTPStream(URL);
-            if (!this->stream) {
-                DEBUGa("Can't open http stream %s", URL);
-                return false;
-            }
-            this->buff = new AudioFileSourceBuffer(this->stream, 2048);
-            return true;
-        }
-
-        bool start_stream_wav(const char* URL) {
-            if (!stream_prepare(URL)) return false; 
-            this->wav = new AudioGeneratorWAV();
-            return(this->wav->begin(this->buff, this->out));
-        }
-        
-        bool start_stream_mp3(const char* URL) {
-            if (!stream_prepare(URL)) return false;
-            this->mp3 = new AudioGeneratorMP3();
-            return (this->mp3->begin(this->buff, this->out));
-        }        
-
-        const char *get_filename_ext(const char *filename) {
-            const char *dot = strrchr(filename, '.');
-            if (!dot) return "";
-            return dot + 1;
-        }
-        
-
-    public:
-        ESPAudio() : mp3(NULL), wav(NULL), file(NULL), out(NULL),  stream(NULL), buff(NULL)  {}
-
-        void setup() override {
-            
-        #ifdef ESP32
-            #ifdef USE_ESP32_VARIANT_ESP32C3
-                if (!LittleFS.begin()) DEBUGa ("LITTLEFS could not be opened! Budet panika pri play audio files!");
-            #else
-                #ifdef SDCARD
-                #else
-                    if (!SPIFFS.begin()) DEBUGa ("SPIFFS could not be opened! Budet panika pri play audio files!");
-                #endif
-            #endif
-        #else
-            if (!LittleFS.begin()) DEBUGa ("LITTLEFS could not be opened! Budet panika pri play audio files!");
-        #endif
-        }
-        
-        void loop() override {
-            if (this->wav && this->wav->isRunning()) {
-                if (!this->wav->loop()) stop();
-            }
-            if (this->mp3 && this->mp3->isRunning()) {
-                if (!this->mp3->loop()) stop();
+    void loop() override {
+        if (this->gen_ && this->gen_->isRunning()) {
+            if (!this->gen_->loop()) {
+                this->stop();
             }
         }
+    }
 
-        void stop_file() {
-            if (this->wav && this->wav->isRunning()) stop();
-            if (this->mp3 && this->mp3->isRunning()) stop();
+    void stop() {
+        if (this->gen_) {
+            this->gen_->stop(); // also stops output (out) and file (src)
         }
+        delete this->gen_;
+        this->gen_ = nullptr;
+        delete this->out_;
+        this->out_ = nullptr;
+        delete this->buf_;
+        this->buf_ = nullptr;
+        delete this->src_;
+        this->src_ = nullptr;
+        
+    #ifdef ESP8266
+        pinMode(I2SO_DATA, OUTPUT);
+    #endif
+
+        DEBUGa("Stopped playing");
+    }
+
+    bool play_file(const char *filename, GeneratorType type) {
+        this->stop();
+        return this->play_(this->open_file_(filename), type);
+    }
     
-        void play_file(const char* fName) {
-            if (this->file || this->stream) stop();
-            bool play_result = false;
-            const char *fext = get_filename_ext(fName);
-            char * http = strstr(fName, "http://");
-            char * https = strstr(fName, "https://");
-            bool play_stream = (http && (http-fName)==0) || (https && (https-fName==0));
-            if (strcmp(fext, "mp3") == 0) play_result = play_stream?start_stream_mp3(fName):start_file_mp3(fName);
-            else if (strcmp(fext, "wav") == 0) play_result = play_stream?start_stream_wav(fName):start_file_wav(fName);
-            else DEBUGa("Unknown audio file type %s", fName);
-            if (play_result) DEBUGa("Started playing audio file %s", fName);
-            else { DEBUGa("Failed to play audio file %s", fName);stop();}   
+    bool play_stream(const char *url, GeneratorType type) {
+        this->stop();
+        return this->play_(this->open_stream_(url), type);
+    }        
+
+    bool play_data(const uint8_t *data, size_t size, GeneratorType type) {
+        this->stop();
+        return this->play_(this->open_data_(data, size), type);
+    }
+
+    void play(const char *filename) {
+        auto type = this->get_file_type_(filename);
+        
+        bool play_result = false;
+        if (type == MP3) {
+            play_result = this->is_stream_(filename) ? 
+                this->play_stream(filename, type) : 
+                this->play_file(filename, type);
+        } else if (type == WAV) {
+            play_result = this->is_stream_(filename) ? 
+                this->play_stream(filename, type) : 
+                this->play_file(filename, type);
+        } else { 
+            DEBUGa("Unknown audio file type %s", filename);
         }
 
-        bool isPlay() {
-            return (this->wav && this->wav->isRunning()) || (this->mp3 && this->mp3->isRunning());
+        if (play_result) {
+            DEBUGa("Started playing audio file %s", filename);
+        } else { 
+            DEBUGa("Failed to play audio file %s", filename);
+            this->stop();
+        }   
+    }
+
+    bool is_playing() {
+        return this->gen_ && this->gen_->isRunning();
+    }
+
+protected:
+    AudioOutput *out_{};
+    AudioGenerator *gen_{};
+    AudioFileSource *src_{};
+    AudioFileSourceBuffer *buf_{};
+    bool fs_initialized_{};
+
+    AudioFileSource *open_file_(const char *filename) {
+        if (!this->fs_initialized_) {
+            // try mount again
+            this->fs_initialized_ = aFS.begin();
+            if (!this->fs_initialized_) {
+                DEBUGa (aFS_STR " is not initialized");
+                return nullptr;
+            }
         }
-    
+        this->src_ = new aAudioFileSource();
+        if (!this->src_->open(filename)) {
+            DEBUGa("Can't open file %s", filename);
+            return nullptr;
+        }
+        return this->src_;
+    }
+
+    AudioFileSource *open_stream_(const char *url) {
+        this->src_ = new AudioFileSourceHTTPStream();
+        if (!this->src_->open(url)) {
+            DEBUGa("Can't open http stream %s", url);
+            return nullptr;
+        }
+        this->buf_ = new AudioFileSourceBuffer(this->src_, 2048);
+        return this->buf_;
+    }
+
+    AudioFileSource *open_data_(const uint8_t *data, size_t size) {
+        this->src_ = new AudioFileSourcePROGMEM(data, size);
+        if (!this->src_->isOpen()) {
+            DEBUGa("Can't read data array");
+            return nullptr;
+        }
+        return this->src_;
+    }
+
+    bool play_(AudioFileSource *src, GeneratorType type) {
+        if (!src) {
+            return false;
+        }
+        if (type == WAV) {
+            this->gen_ = new AudioGeneratorWAV();
+        } else if (type == MP3) {
+            this->gen_ = new AudioGeneratorMP3();
+        } else {
+            return false;
+        }
+        this->out_ = new aAudioOutput();  
+        return this->gen_->begin(src, this->out_);
+    }
+
+    const GeneratorType get_file_type_(const char *filename) {
+        const char *dot = strrchr(filename, '.');
+        if (!dot) {
+            return UNK;
+        }
+        dot++;
+        if ((dot[0] == 'w' || dot[0] == 'w') &&
+            (dot[1] == 'a' || dot[1] == 'A') &&
+            (dot[2] == 'v' || dot[2] == 'W') &&
+            (dot[3] == 0)) {
+            return WAV;
+        }
+        if ((dot[0] == 'm' || dot[0] == 'M') &&
+            (dot[1] == 'p' || dot[1] == 'P') && 
+            (dot[2] == '3') && 
+            (dot[3] == 0)) {
+            return MP3;
+        }
+        return UNK;
+    }
+
+    bool is_stream_(const char *filename) {
+        const char *http = strstr(filename, "http://");
+        const char *https = strstr(filename, "https://");
+        return (http && (http - filename) == 0) || (https && (https - filename) == 0);
+    }
 };
