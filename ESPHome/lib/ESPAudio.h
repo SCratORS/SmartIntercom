@@ -189,7 +189,7 @@ protected:
             return UNK;
         }
         dot++;
-        if ((dot[0] == 'w' || dot[0] == 'w') &&
+        if ((dot[0] == 'w' || dot[0] == 'W') &&
             (dot[1] == 'a' || dot[1] == 'A') &&
             (dot[2] == 'v' || dot[2] == 'V') &&
             (dot[3] == 0)) {
