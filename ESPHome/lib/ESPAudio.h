@@ -1,3 +1,4 @@
+// #define SDCARD //if used sd card
 #include "esphome.h"
 
 #if defined(ESP32) && !defined(USE_ESP32_VARIANT_ESP32C3)
