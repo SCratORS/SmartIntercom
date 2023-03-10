@@ -8,7 +8,7 @@
         #include "SD.h"
         #include "AudioFileSourceSD.h"
         #define aFS SD
-        #define aFS_STR "SD";
+        #define aFS_STR "SD"
         using aAudioFileSource = AudioFileSourceSD;
     #else
         #include "SPIFFS.h"
