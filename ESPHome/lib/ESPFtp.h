@@ -37,14 +37,12 @@ class ESPFtp : public Component {
         #else
             if (LittleFS.begin()) this->ftpSrv = new FTPServer(LittleFS);
         #endif
-        
             if (this->ftpSrv) this->ftpSrv->begin (username, password);
             else DEBUGf ("File system could not be opened; ftp server will not work");
         }
 
         void loop() override {
             if (this->ftpSrv) this->ftpSrv->handleFTP ();  
-            
         }    
 };
 
