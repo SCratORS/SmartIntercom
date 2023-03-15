@@ -5,35 +5,35 @@
 #############################################
 
 ########## For ESP32 Nelma5
-smartintercom_nelma5_user_no_connect_link:
+smartintercom_user_no_connect_link:
     name: 'Ссылка на аудио файл "Абонент не доступен"'
     icon: mdi:file-music
     min: 2
     max: 100
     pattern: (/\w|http://).*(\.mp3|\.wav)
     mode: text
-smartintercom_nelma5_user_no_answer_link:
+smartintercom_user_no_answer_link:
     name: 'Ссылка на аудио файл "Абонент не отвечает"'
     icon: mdi:file-music
     min: 2
     max: 100
     pattern: (/\w|http://).*(\.mp3|\.wav)
     mode: text
-smartintercom_nelma5_delivery_access_link:
+smartintercom_delivery_access_link:
     name: 'Ссылка на аудио файл "Доступ для курьера"'
     icon: mdi:file-music
     min: 2
     max: 100
     pattern: (/\w|http://).*(\.mp3|\.wav)
     mode: text
-smartintercom_nelma5_user_denied_link:
+smartintercom_user_denied_link:
     name: 'Ссылка на аудио файл "Доступ запрещён"'
     icon: mdi:file-music
     min: 2
     max: 100
     pattern: (/\w|http://).*(\.mp3|\.wav)
     mode: text
-smartintercom_nelma5_user_access_link:
+smartintercom_user_access_link:
     name: 'Ссылка на аудио файл "Доступ разрешен"'
     icon: mdi:file-music
     min: 2
