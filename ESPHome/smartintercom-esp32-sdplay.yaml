@@ -41,7 +41,6 @@ esphome:
   name: ${dev_name}
   friendly_name: ${f_name}
   comment: "https://t.me/smartintercom"
-
   libraries:
     - SPI
     - FS
