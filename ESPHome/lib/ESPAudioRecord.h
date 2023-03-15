@@ -1,3 +1,4 @@
+//Не используй этот файл. Он для тестирования и врядли рабочий.
 #include "esphome.h"
 #include "LittleFS.h"
 #include <ESP8266AudioRecord.h>
