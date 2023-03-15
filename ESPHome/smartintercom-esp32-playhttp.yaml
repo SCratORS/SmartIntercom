@@ -2,7 +2,7 @@ substitutions:
   dev_name: smartintercom
   f_name: "SmartIntercom (ESP32 MOD)"
   
-#ESP8266 Определение нужных GPIO
+#ESP32 Определение нужных GPIO
   base: esp32dev
   led_status: GPIO16             # Индикатор статуса API, GPIO2 - это встроенный синий светодиод на ESP12
   led_indicator: GPIO13         # Дополнительный индикатор, который будет показывать режимы и прочее.
