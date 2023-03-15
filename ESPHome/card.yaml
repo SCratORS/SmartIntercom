@@ -1,18 +1,18 @@
 type: entities
 entities:
   - entity: sensor.smartintercom_line_status
-    name: Домофон
+    name: "Домофон"
     secondary_info: last-changed
   - entity: select.smartintercom_modes
-    name: Режим работы
+    name: "Режим работы"
   - type: buttons
     entities:
       - entity: switch.smartintercom_accept_call
-        name: Открыть
+        name: "Открыть"
       - entity: switch.smartintercom_delivery
-        name: Курьер
+        name: "Курьер"
       - entity: switch.smartintercom_reject_call
-        name: Сброс
+        name: "Сброс"
       - entity: switch.smartintercom_sound
       - entity: switch.smartintercom_mute
       - entity: switch.smartintercom_led
