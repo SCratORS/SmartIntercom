@@ -1,5 +1,6 @@
 substitutions:
   dev_name: smartintercom
+  f_name: "SmartIntercom (ESP8266 MOD)"
   
 #ESP8266 Определение нужных GPIO
   base: esp12e
@@ -83,6 +84,7 @@ substitutions:
 
 esphome:
   name: ${dev_name}
+  friendly_name: ${f_name}
   comment: "https://t.me/smartintercom"
   libraries:
     - SPI
