@@ -1,7 +1,5 @@
 #include "esphome.h"
 
-//#define SDCARD
-
 #ifdef ESP32
     #ifdef USE_ESP32_VARIANT_ESP32C3
         #include "LittleFS.h"
