@@ -173,7 +173,7 @@ api:
 ota:
   password: "12345678"
 
-# Пошла мазута
+# Начало начал
 light:
   - platform: status_led
     id: led_status
