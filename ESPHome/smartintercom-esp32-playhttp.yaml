@@ -4,12 +4,12 @@ substitutions:
   
 #ESP32 Определение нужных GPIO
   base: esp32dev
-  led_status: GPIO16             # Индикатор статуса API, GPIO2 - это встроенный синий светодиод на ESP12
+  led_status: GPIO16            # Индикатор статуса API, GPIO2 - это встроенный синий светодиод на ESP12
   led_indicator: GPIO13         # Дополнительный индикатор, который будет показывать режимы и прочее.
   detect_line: GPIO12           # Пин детектора вызова
   button_boot: GPIO0            # Кнопка управления платой и перевода в режим прошивки
   relay_line: GPIO14            # Пин "Переключение линии, плата/трубка"
-  switch_open: GPIO17            # Пин "Открытие двери"
+  switch_open: GPIO17           # Пин "Открытие двери"
   switch_phone: GPIO4           # Пин "Трубка положена/поднята"
 
 #input_select_mode_value
