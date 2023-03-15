@@ -1,6 +1,6 @@
 substitutions:
-  dev_name: smartintercom_nelma5
-  f_name: "SmartIntercom Nelma 5 (ESP32 MOD)"
+  dev_name: smartintercom
+  f_name: "SmartIntercom (ESP32 MOD)"
   
 #ESP8266 Определение нужных GPIO
   base: esp32dev
