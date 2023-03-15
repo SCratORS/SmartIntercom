@@ -1,5 +1,9 @@
+## !!! ВНИМАНИЕ !!! ##
+## В файле Audio.h раскоментируй #define SDCARD ##
+
 substitutions:
-  dev_name: smartintercom_nelma5
+  dev_name: smartintercom
+  f_name: "SmartIntercom (ESP32 SD MOD)"
   
 #ESP32_pinout_mapping
   base: esp32dev
@@ -35,7 +39,9 @@ substitutions:
   
 esphome:
   name: ${dev_name}
+  friendly_name: ${f_name}
   comment: "https://t.me/smartintercom"
+
   libraries:
     - SPI
     - FS
