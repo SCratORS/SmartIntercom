@@ -47,10 +47,10 @@
 
 ### При использовании ESP Download Tools (ESP8266) - Прошивка для воспроизведения Аудио файлов из LittleFS
 1. Основной файл прошивки [ESP8266_smartintercom.bin](ESP8266_smartintercom.bin) - Прошивать в адрес 0x0
-2. Аудиофайлы в виде образа LittleFS[ESP8266_mklittlefs_0x200000.bin](bin/ESP8266_mklittlefs_0x200000.bin) - Прошивать в адрес 0x200000
+2. Аудиофайлы в виде образа LittleFS [ESP8266_mklittlefs_0x200000.bin](bin/ESP8266_mklittlefs_0x200000.bin) - Прошивать в адрес 0x200000
 ### При использовании ESP Download Tools (ESP32) - Прошивка для воспроизведения Аудио файлов из LittleFS
 1. Основной файл прошивки [ESP32_smartintercom.bin](ESP32_smartintercom.bin) - Прошивать в адрес 0x0
-2. Аудиофайлы в виде образа LittleFS[ESP32_mklittlefs_0x2B0000.bin](bin/ESP32_mklittlefs_0x2B0000.bin) - Прошивать в адрес 0x2B0000
+2. Аудиофайлы в виде образа LittleFS [ESP32_mklittlefs_0x2B0000.bin](bin/ESP32_mklittlefs_0x2B0000.bin) - Прошивать в адрес 0x2B0000
 ## Дополнительно:
 Добавление управления через Телеграм:
 https://github.com/SCratORS/SmartIntercom/issues/3
