@@ -1,7 +1,5 @@
-// Расскоментируй строку ниже если используешь SD Карту
-// #define SDCARD
+//#define SDCARD
 #include "esphome.h"
-
 #if defined(ESP32) && !defined(USE_ESP32_VARIANT_ESP32C3)
     #include "FS.h"
     #include "AudioOutputI2S.h"
@@ -13,11 +11,11 @@
         #define aFS_STR "SD"
         using aAudioFileSource = AudioFileSourceSD;
     #else
-        #include "SPIFFS.h"
-        #include "AudioFileSourceSPIFFS.h"
-        #define aFS SPIFFS
-        #define aFS_STR "SPIFFS"
-        using aAudioFileSource = AudioFileSourceSPIFFS;
+        #include "LittleFS.h"
+        #include "AudioFileSourceLittleFS.h"
+        #define aFS LittleFS
+        #define aFS_STR "LittleFS"
+        using aAudioFileSource = AudioFileSourceLittleFS;
     #endif
 #else
     #include "LittleFS.h"
