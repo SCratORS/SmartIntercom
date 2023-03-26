@@ -1,13 +1,12 @@
 substitutions:
   dev_name: smartintercom
-  f_name: "SmartIntercom (ESP8266 MOD)"
   
 #ESP8266 Определение нужных GPIO
   base: esp12e
   led_status: GPIO2             # Индикатор статуса API, GPIO2 - это встроенный синий светодиод на ESP12
   led_indicator: GPIO13         # Дополнительный индикатор, который будет показывать режимы и прочее.
   detect_line: GPIO12           # Пин детектора вызова
-  button_boot: GPIO0            # Кнопка управления платой и перевода в режим прошивки.
+  button_boot: GPIO0            # Кнопка управления платой и перевода в режим прошивки
   button_ring: GPIO1            # Внешняя кнопка
   relay_line: GPIO14            # Пин "Переключение линии, плата/трубка"
   switch_open: GPIO5            # Пин "Открытие двери"
@@ -27,14 +26,21 @@ substitutions:
   line_status_close:  "Закрыто"
   
 #delay
-  call_end_detect_delay: 3000ms     # Интервал между детектированием вызова
+  call_end_detect_delay: 4000ms     # Интервал между детектированием вызова
   delay_before_switch_line: 1000ms  # Отпределили вызов, *** подождали ***... Передаем управление на плату, отключаем трубку.
   delay_before_voice: 1000ms        # Плата получила управление, *** подождали *** ... воспроизводим аудио, если надо.
   delay_before_open_door: 100ms     # Воспроизведение аудио закончилось, *** подождали *** ... нажимаем кнопку открытия двери.
   delay_open_on_time: 600ms         # Кнопка открытия двери нажата, *** подождали *** ... отпустили кнопку.
   delay_after_close_door: 2000ms    # Отпустили кнопку открытия двери, *** подождали *** ... Возвращаем управление на трубку
   delay_no_answer: 30s              # Пауза для режима "Сброс если нет ответа" - сколько этот ответ плата ждёт
-  
+
+#audio_support
+  play_user_access_allowed: playFile(audio_player, "/user_access_allowed.wav")
+  play_delivery_access_allowed: playFile(audio_player, "/delivery_access_allowed.wav")
+  play_access_denied: playFile(audio_player, "/access_denied.wav")
+  play_user_no_connect: playFile(audio_player, "/user_no_connect.wav")
+  play_user_no_answer: playFile(audio_player, "/user_no_answer.wav")
+
 # Логика работы:
 # 
 # Определение "Вызова", интеревал между детектированием - call_end_detect_delay (3 сек.)
@@ -84,7 +90,6 @@ substitutions:
 
 esphome:
   name: ${dev_name}
-  friendly_name: ${f_name}
   comment: "https://t.me/smartintercom"
   libraries:
     - SPI
@@ -114,8 +119,8 @@ esp8266:
  
 # Настройки Вай-Фая тащим из файла секретов, или вписывай руками  
 wifi:
-  ssid: !secret ssid
-  password: !secret passwd
+  ssid: !secret wifi_ssid1
+  password: !secret wifi_password1
   # Настройки автономной точки доступа, понимается через 1 минуту после старта если не удалось подключиться к Вай-Фаю
   ap:
     ssid: ${dev_name}
@@ -173,7 +178,7 @@ api:
 ota:
   password: "12345678"
 
-# Начало начал
+# Пошла мазута
 light:
   - platform: status_led
     id: led_status
@@ -181,8 +186,16 @@ light:
     pin:
       number: $led_status
       inverted: True
+    effects:
+      - strobe:
+          name: blink
+          colors:
+            - state: true
+              duration: 100ms
+            - state: false
+              duration: 1900ms
   - platform: monochromatic
-    id: led_indicator
+    id: led_action
     output: indicator
     internal: true
     restore_mode: ALWAYS_OFF
@@ -284,56 +297,49 @@ script:
                     lambda: 'return id(status_once_mode) == 3;'
                   then:
                     switch.turn_on: reject_call
-  - id: led_off
+  - id: led_check
     then:
       - light.turn_off:
-          id: led_indicator
+          id: led_action
+      - light.turn_off:
+          id: led_status
       - if:
           condition:
-            lambda: 'return id(status_mute);'
+            lambda: 'return id(status_leding);'
           then:
-            if:
+          - if:
               condition:
-                lambda: 'return id(status_leding);'
+                lambda: 'return id(status_mute);'
+              then:
+                if:
+                  condition:
+                    lambda: 'return id(status_leding);'
+                  then:
+                    light.turn_on:
+                      id: led_action
+                      effect: pulse
+          - if:
+              condition:
+                  lambda: 'return id(status_once_mode) > 0;'
+              then:
+                if:
+                  condition:
+                    lambda: 'return id(status_once_mode) < 3;'
+                  then:
+                    light.turn_on:
+                      id: led_action
+                      effect: blink
+                  else:
+                    light.turn_on:
+                      id: led_status
+                      effect: blink
+          - if:
+              condition:
+                lambda: 'return id(status_line);'
               then:
                 light.turn_on:
-                  id: led_indicator
-                  effect: pulse
-  - id: led_blink
-    then:
-      - light.turn_off:
-          id: led_indicator
-      - if:
-          condition:
-            lambda: 'return id(status_leding);'
-          then:
-            light.turn_on:
-              id: led_indicator
-              effect: blink
-                
-  - id: led_calling
-    then:
-      - light.turn_off:
-          id: led_indicator
-      - if:
-          condition:
-            lambda: 'return id(status_leding);'
-          then:
-            light.turn_on:
-              id: led_indicator
-              effect: calling
-                
-  - id: led_pulse
-    then:
-      - light.turn_off:
-          id: led_indicator
-      - if:
-          condition:
-            lambda: 'return id(status_leding);'
-          then:
-            light.turn_on:
-              id: led_indicator
-              effect: pulse
+                  id: led_action
+                  effect: calling
 
   # Accept incoming call
   - id: accepting
@@ -350,13 +356,13 @@ script:
               condition:
                 switch.is_on: delivery
               then:
-                lambda: 'playFile(audio_player, "/delivery_access_allowed.wav");'
+                lambda: ${play_delivery_access_allowed};
               else:
                 if:
                   condition:
                     lambda: 'return id(status_sound);'
                   then:
-                    lambda: 'playFile(audio_player, "/user_access_allowed.wav");'                   
+                    lambda: ${play_user_access_allowed};                   
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
           - delay: $delay_before_open_door
@@ -398,15 +404,15 @@ script:
                   condition:
                     lambda: 'return id(current_mode) == 2;'
                   then:
-                    lambda: 'playFile(audio_player, "/access_denied.wav");'                  
+                    lambda: ${play_access_denied};                  
                   else:
                     if:
                       condition:
                         switch.is_on: reject_call
                       then:
-                        lambda: 'playFile(audio_player, "/user_no_connect.wav");'                    
+                        lambda: ${play_user_no_connect};                 
                       else:
-                        lambda: 'playFile(audio_player, "/user_no_answer.wav");'
+                        lambda: ${play_user_no_answer};
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
           - delay: $delay_open_on_time
@@ -513,13 +519,6 @@ sensor:
   - platform: wifi_signal
     name: ${dev_name}_rssi
     update_interval: 600s
-  - platform: template
-    name: ${dev_name}_heap
-    lambda: "return ESP.getFreeHeap();"
-    update_interval: 20s
-    unit_of_measurement: bytes
-    accuracy_decimals: 0
-    entity_category: "diagnostic"
     
 binary_sensor:
   - platform: gpio
@@ -536,8 +535,8 @@ binary_sensor:
         condition:
           lambda: 'return id(status_line) == false;'
         then:
-          - script.execute: led_calling
           - lambda: 'id(status_line) = true;'
+          - script.execute: led_check
           - logger.log: "Incoming call detected"
           - if:
               condition:
@@ -559,7 +558,7 @@ binary_sensor:
             - output.turn_off: relay_switch_line
       - lambda: 'id(status_line) = false;'
       - logger.log: "Incoming call completed"
-      - script.execute: led_off
+      - script.execute: led_check
     on_state:
       lambda: |-
         if (x) {
@@ -631,7 +630,6 @@ switch:
           id: delivery
           state: true
       - switch.turn_on: accept_call
-      - lambda: 'id(status_once_mode) = 2;'
     turn_off_action:
       - switch.template.publish:
           id: delivery
@@ -643,6 +641,7 @@ switch:
             lambda: 'id(status_once_mode) = 1;'
           else:
             lambda: 'id(status_once_mode) = 0;'
+      - script.execute: led_check
           
 
   - platform: template
@@ -657,27 +656,27 @@ switch:
       - logger.log: "Accept call switch is ON"
       - if:
           condition:
+            switch.is_on: delivery
+          then:
+            lambda: 'id(status_once_mode) = 2;'
+          else: 
+            lambda: 'id(status_once_mode) = 1;'
+      - script.execute: led_check
+      - if:
+          condition:
             lambda: 'return id(status_line);'
           then:
             - logger.log: "Execute action script"
             - script.execute: state_call
           else:
-            - script.execute: led_blink
             - logger.log: "No incoming call. One-time mode is set."
-      - lambda: 'id(status_once_mode) = 1;'
     turn_off_action:
       - switch.template.publish:
           id: accept_call
           state: false
       - switch.turn_off: delivery
-      - if:
-          condition:
-            lambda: 'return id(status_line);'
-          then:
-            script.execute: led_calling
-          else:
-            script.execute: led_off
       - lambda: 'id(status_once_mode) = 0;'
+      - script.execute: led_check
 
     
   - platform: template
@@ -690,6 +689,8 @@ switch:
           state: true
       - switch.turn_off: accept_call
       - switch.turn_off: delivery
+      - lambda: 'id(status_once_mode) = 3;'
+      - script.execute: led_check
       - if:
           condition:
             lambda: 'return id(status_line);'
@@ -697,21 +698,13 @@ switch:
             - logger.log: "Execute action script"   
             - script.execute: state_call
           else:
-            - script.execute: led_blink
             - logger.log: "No incoming call. One-time mode is set."
-      - lambda: 'id(status_once_mode) = 3;'
     turn_off_action:
       - switch.template.publish:
           id: reject_call
           state: false
-      - if:
-          condition:
-            lambda: 'return id(status_line);'
-          then:
-            script.execute: led_calling
-          else:
-            script.execute: led_off
       - lambda: 'id(status_once_mode) = 0;'
+      - script.execute: led_check
 
   - platform: template
     name: ${dev_name}_mute
@@ -723,28 +716,13 @@ switch:
           id: mute
           state: true
       - lambda: 'id(status_mute) = true;'
-      - if:
-          condition:
-            and:
-              - lambda: 'return id(status_line) == false;'
-              - switch.is_off: accept_call
-              - switch.is_off: reject_call
-          then:
-              script.execute: led_pulse
-
+      - script.execute: led_check
     turn_off_action:
       - switch.template.publish:
           id: mute
           state: false
       - lambda: 'id(status_mute) = false;'
-      - if:
-          condition:
-            and:
-              - lambda: 'return id(status_line) == false;'
-              - switch.is_off: accept_call
-              - switch.is_off: reject_call
-          then:
-              script.execute: led_off
+      - script.execute: led_check
               
   - platform: template
     name: ${dev_name}_phone_disable
@@ -784,35 +762,13 @@ switch:
           id: led
           state: true
       - lambda: 'id(status_leding) = true;'
-      - if:
-          condition:
-            lambda: 'return id(status_line);'
-          then:
-            script.execute: led_calling
-          else:
-            if:
-              condition:
-                and:
-                  - lambda: 'return id(status_mute) == true;'
-                  - lambda: 'return id(status_line) == false;'
-                  - switch.is_off: accept_call
-                  - switch.is_off: reject_call
-              then:
-                  script.execute: led_pulse
-              else:
-                if:
-                  condition:
-                    or:
-                      - switch.is_on: accept_call
-                      - switch.is_on: reject_call
-                  then:
-                    script.execute: led_blink
+      - script.execute: led_check
     turn_off_action:
       - switch.template.publish:
           id: led
           state: false
       - lambda: 'id(status_leding) = false;'
-      - script.execute: led_off
+      - script.execute: led_check
 
   - platform: template
     name: ${dev_name}_sound
