@@ -1,28 +1,21 @@
-//#define SDCARD
 #include "esphome.h"
+
 #if defined(ESP32) && !defined(USE_ESP32_VARIANT_ESP32C3)
-    #include "FS.h"
     #include "AudioOutputI2S.h"
-    #define aAudioOutput() AudioOutputI2S(0, 1/*INTERNAL_DAC*/)
-    #ifdef SDCARD
-        #include "SD.h"
-        #include "AudioFileSourceSD.h"
-        #define aFS SD
-        #define aFS_STR "SD"
-        using aAudioFileSource = AudioFileSourceSD;
-    #else
-        #include "LittleFS.h"
-        #include "AudioFileSourceLittleFS.h"
-        #define aFS LittleFS
-        #define aFS_STR "LittleFS"
-        using aAudioFileSource = AudioFileSourceLittleFS;
-    #endif
+    #define aAudioOutput() AudioOutputI2S(0, AudioOutputI2S::INTERNAL_DAC)
+#else
+    #include "AudioOutputI2SNoDAC.h"
+    #define aAudioOutput() AudioOutputI2SNoDAC()
+#endif
+#if defined(SDCARD)
+    #include "SD.h"
+    #include "AudioFileSourceSD.h"
+    #define aFS SD
+    #define aFS_STR "SD"
+    using aAudioFileSource = AudioFileSourceSD;
 #else
     #include "LittleFS.h"
     #include "AudioFileSourceLittleFS.h"
-    #include "AudioOutputI2SNoDAC.h"
-
-    #define aAudioOutput() AudioOutputI2SNoDAC()
     #define aFS LittleFS
     #define aFS_STR "LittleFS"
     using aAudioFileSource = AudioFileSourceLittleFS;
