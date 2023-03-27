@@ -1,6 +1,5 @@
 substitutions:
   dev_name: smartintercom
-  f_name: "SmartIntercom (ESP32 MOD)"
   
 #ESP32 Определение нужных GPIO
   base: esp32dev
@@ -83,7 +82,6 @@ substitutions:
 
 esphome:
   name: ${dev_name}
-  friendly_name: ${f_name}
   comment: "https://t.me/smartintercom"
   on_boot:
     priority: -100
