@@ -25,7 +25,7 @@
 2. Запустить дополнение FileEditor и перейти к рабочий каталог /сonfig/esphome/
 3. Используя меню "File Upload" загрузить файл [smartintercom-esp8266.yaml](ESPHome/smartintercom-esp8266.yaml)
 4. Используя меню "Create Folder" создать папку lib и перейти в неё
-5. Используя меню "File Upload" загрузить файлы библиотек [ESPAudio.h](ESPHome/lib/ESPAudio.h) и [ESPFtp.h](ESPHome/lib/ESPFtp.h)
+5. Используя меню "File Upload" загрузить файлы библиотек [ESPAudio.h](ESPHome/lib/ESPAudio.h) и [ESPUtils.h](ESPHome/lib/ESPUtils.h)
 6. Запустить дополнение ESPHome, - там появится проект "smartintercom" в статусе OFFLINE
 7. Для того чтобы статус устройства стал ONLINE, проект должен быть скомпилирован.
 8. Нажать на проекте "...", выбрать меню "INSTALL", выбрать способ прошивки (просто для компиляции можно выбрать "Manual Download - Modern Format"). Во время компиляции все необходимые библиотеки ESPHome загрузит сам
@@ -38,7 +38,7 @@
 3. Используя меню "File Upload" загрузить файл [smartintercom-esp32-littlefs.yaml](ESPHome/smartintercom-esp32-littlefs.yaml)
 4. Используя меню "File Upload" загрузить файл [partitions_esp32.csv](ESPHome/partitions_esp32.csv)
 4. Используя меню "Create Folder" создать папку lib и перейти в неё
-5. Используя меню "File Upload" загрузить файлы библиотек [ESPAudio.h](ESPHome/lib/ESPAudio.h) и [ESPFtp.h](ESPHome/lib/ESPFtp.h)
+5. Используя меню "File Upload" загрузить файлы библиотек [ESPAudio.h](ESPHome/lib/ESPAudio.h) и [ESPUtils.h](ESPHome/lib/ESPUtils.h)
 6. Запустить дополнение ESPHome, - там появится проект "smartintercom" в статусе OFFLINE
 7. Для того чтобы статус устройства стал ONLINE, проект должен быть скомпилирован.
 8. Нажать на проекте "...", выбрать меню "INSTALL", выбрать способ прошивки (просто для компиляции можно выбрать "Manual Download - Modern Format"). Во время компиляции все необходимые библиотеки ESPHome загрузит сам
