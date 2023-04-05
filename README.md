@@ -35,7 +35,7 @@
 ### При использовании ESPHome (на примере HomeAssistant и устройств на базе ESP32)
 1. Установить из магазина дополнений "ESPHome" и "FileEditor"
 2. Запустить дополнение FileEditor и перейти к рабочий каталог /сonfig/esphome/
-3. Используя меню "File Upload" загрузить файл [smartintercom-esp32-littlefs.yaml](ESPHome/smartintercom-esp32-littlefs.yaml)
+3. Используя меню "File Upload" загрузить файл [smartintercom-esp32.yaml](ESPHome/smartintercom-esp32.yaml)
 4. Используя меню "File Upload" загрузить файл [partitions_esp32.csv](ESPHome/partitions_esp32.csv)
 4. Используя меню "Create Folder" создать папку lib и перейти в неё
 5. Используя меню "File Upload" загрузить файлы библиотек [ESPAudio.h](ESPHome/lib/ESPAudio.h) и [ESPUtils.h](ESPHome/lib/ESPUtils.h)
