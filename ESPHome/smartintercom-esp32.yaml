@@ -118,8 +118,8 @@ esphome:
 logger:
 
 wifi:
-  ssid: !secret wifi_ssid1
-  password: !secret wifi_password1
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
   ap:
 
 captive_portal:
