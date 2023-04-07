@@ -457,7 +457,6 @@ script:
                         lambda: ${play_user_no_answer};
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
-          - script.execute: open_actions
           - script.execute: down_actions
 
   # Reject no answer
