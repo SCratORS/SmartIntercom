@@ -27,11 +27,11 @@ substitutions:
   
 #delay
   call_end_detect_delay: 4000ms     # Интервал между детектированием вызова
-# delay_before_answer: 1000ms       # Отпределили вызов, *** подождали ***... Передаем управление на плату,
+  # delay_before_answer: 1000ms       # Отпределили вызов, *** подождали ***... Передаем управление на плату,
                                     # отключаем трубку, *** подождали *** ... воспроизводим аудио, если надо. (Number компонент before_answer)
   delay_before_open_door: 100ms     # Воспроизведение аудио закончилось, *** подождали *** ... нажимаем кнопку открытия двери.
-# delay_open_on_time: 600ms         # Кнопка открытия двери нажата, *** подождали *** ... отпустили кнопку. (Number компонент open_time)
-# delay_after_close_door: 2000ms    # Отпустили кнопку открытия двери, *** подождали *** ... Возвращаем управление на трубку (Number компонент after_close)
+  # delay_open_on_time: 600ms         # Кнопка открытия двери нажата, *** подождали *** ... отпустили кнопку. (Number компонент open_time)
+  # delay_after_close_door: 2000ms    # Отпустили кнопку открытия двери, *** подождали *** ... Возвращаем управление на трубку (Number компонент after_close)
   delay_no_answer: 30s              # Пауза для режима "Сброс если нет ответа" - сколько этот ответ плата ждёт
 
 #audio_support
@@ -94,7 +94,7 @@ esp8266:
 
 esphome:
   name: ${dev_name}
-  comment: "Smartintercom ESP8266"
+  comment: "Перед прошивкой проверь наличие настроек wifi_ssid и wifi_password в файле \"SECRETS\" - кнопка вверху справа"
   libraries:
     - SPI
     - ESP8266SdFat
@@ -165,18 +165,7 @@ globals:
     type: int
     initial_value: '0'
     restore_value: true
-  - id: before_answer
-    type: int
-    initial_value: '1000'
-    restore_value: true
-  - id: open_time
-    type: int
-    initial_value: '600'
-    restore_value: true
-  - id: after_close
-    type: int
-    initial_value: '2000'
-    restore_value: true
+
 
 # MQTT и API вместе работать не могут. Выбери что надо.
 # +---------------------------------------------+
@@ -249,15 +238,6 @@ script:
   - id: boot_script
     then:
       - logger.log: "Boot config"
-      - number.set:
-          id: delay_before_answer
-          value: !lambda 'return id(before_answer);' 
-      - number.set:
-          id: delay_open_time
-          value: !lambda 'return id(open_time);' 
-      - number.set:
-          id: delay_after_close
-          value: !lambda 'return id(after_close);' 
       - if:
           condition:
             lambda: 'return id(current_mode) == 0;'
@@ -340,9 +320,13 @@ script:
               condition:
                 lambda: 'return id(status_mute);'
               then:
-                light.turn_on:
-                  id: led_action
-                  effect: pulse
+                if:
+                  condition:
+                    lambda: 'return id(status_leding);'
+                  then:
+                    light.turn_on:
+                      id: led_action
+                      effect: pulse
           - if:
               condition:
                   lambda: 'return id(status_once_mode) > 0;'
@@ -366,46 +350,6 @@ script:
                   id: led_action
                   effect: calling
 
-  # Up phone action 
-  - id: up_actions
-    then:
-      - output.turn_on: relay_switch_line
-      - output.turn_off: phone_down
-      - lambda: 'id(line_status).publish_state("${line_status_answer}");'
-      - delay: !lambda 'return id(before_answer);'
-  
-  # Open door action 
-  - id: open_actions
-    then:
-      - delay: $delay_before_open_door
-      - output.turn_on: open_door
-      - lambda: 'id(line_status).publish_state("${line_status_open}");'
-      - delay: !lambda 'return id(open_time);'
-      - output.turn_off: open_door
-  
-  # End call actions   
-  - id: down_actions
-    then:
-      - lambda: 'id(line_status).publish_state("${line_status_reject}");'
-      - delay: !lambda 'return id(after_close);'
-      - if:
-          condition:
-            lambda: 'return id(status_line);'
-          then:
-            output.turn_on: phone_down
-      - lambda: 'id(line_status).publish_state("${line_status_close}");'
-      - if:
-          condition:
-            switch.is_on: accept_call
-          then:
-            - switch.turn_off: accept_call
-            - switch.turn_off: delivery
-      - if:
-          condition:
-            switch.is_on: reject_call
-          then:
-            switch.turn_off: reject_call
-
   # Accept incoming call
   - id: accepting
     then:
@@ -413,7 +357,10 @@ script:
         condition:
           lambda: 'return id(status_line);'
         then:
-          - script.execute: up_actions
+          - output.turn_on: relay_switch_line
+          - output.turn_off: phone_down
+          - lambda: 'id(line_status).publish_state("${line_status_answer}");'
+          - delay: !lambda "return id(delay_before_answer).state;"
           - if:
               condition:
                 switch.is_on: delivery
@@ -427,8 +374,25 @@ script:
                     lambda: ${play_user_access_allowed};                   
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
-          - script.execute: open_actions
-          - script.execute: down_actions
+          - delay: $delay_before_open_door
+          - output.turn_on: open_door
+          - lambda: 'id(line_status).publish_state("${line_status_open}");'
+          - delay: !lambda "return id(delay_open_time).state;"
+          - output.turn_off: open_door
+          - lambda: 'id(line_status).publish_state("${line_status_reject}");'
+          - delay: !lambda "return id(delay_after_close).state;"
+          - if:
+              condition:
+                lambda: 'return id(status_line);'
+              then:
+                output.turn_on: phone_down
+          - lambda: 'id(line_status).publish_state("${line_status_close}");'
+          - if:
+              condition:
+                switch.is_on: accept_call
+              then:
+                - switch.turn_off: accept_call
+                - switch.turn_off: delivery
 
   # Reject incoming call
   - id: rejecting
@@ -437,7 +401,10 @@ script:
         condition:
           lambda: 'return id(status_line);'
         then:
-          - script.execute: up_actions
+          - output.turn_on: relay_switch_line
+          - output.turn_off: phone_down
+          - lambda: 'id(line_status).publish_state("${line_status_answer}");'
+          - delay: !lambda "return id(delay_before_answer).state;"
           - if:
               condition:
                 lambda: 'return id(status_sound);'
@@ -457,7 +424,20 @@ script:
                         lambda: ${play_user_no_answer};
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
-          - script.execute: down_actions
+          - delay: !lambda "return id(delay_open_time).state;"
+          - lambda: 'id(line_status).publish_state("${line_status_reject}");'
+          - if:
+              condition:
+                lambda: 'return id(status_line);'
+              then:
+                output.turn_on: phone_down
+          - lambda: 'id(line_status).publish_state("${line_status_close}");'
+          - delay: !lambda "return id(delay_after_close).state;"
+          - if:
+              condition:
+                switch.is_on: reject_call
+              then:
+                switch.turn_off: reject_call
 
   # Reject no answer
   - id: rejecting_no_answer
@@ -503,6 +483,7 @@ script:
                         else:
                           lambda: 'id(line_status).publish_state("${line_status_close}");'
 
+
 number:
   - platform: template
     name: ${dev_name}_before_answer
@@ -512,12 +493,11 @@ number:
     mode: box
     unit_of_measurement: "мс"
     entity_category: "config"
+    restore_value: true
+    initial_value: 1000
     min_value: 100
     max_value: 5000
     step: 100
-    on_value:
-      then:
-        lambda: 'id(before_answer) = x;'
   - platform: template
     name: ${dev_name}_open_time
     icon: "mdi:clock"
@@ -526,12 +506,11 @@ number:
     mode: box
     unit_of_measurement: "мс"
     entity_category: "config"
+    restore_value: true
+    initial_value: 600
     min_value: 100
     max_value: 2000
     step: 50
-    on_value:
-      then:
-        lambda: 'id(open_time) = x;'
   - platform: template
     name: ${dev_name}_after_close
     icon: "mdi:clock"
@@ -540,12 +519,11 @@ number:
     mode: box
     unit_of_measurement: "мс"
     entity_category: "config"
+    restore_value: true
+    initial_value: 2000
     min_value: 100
     max_value: 5000
     step: 100
-    on_value:
-      then:
-        lambda: 'id(after_close) = x;'
 
 select:
   - platform: template
@@ -630,8 +608,7 @@ binary_sensor:
               then:
                 - output.turn_on: phone_down
                 - output.turn_on: relay_switch_line
-              else:
-                - delay: !lambda 'return id(before_answer);'
+          - delay: !lambda "return id(delay_before_answer).state;"
           - script.execute: state_call
     on_release:
       - if:
