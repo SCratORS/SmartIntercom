@@ -3,12 +3,12 @@ substitutions:
   
 #ESP32 Определение нужных GPIO
   base: esp32dev
-  led_status: GPIO16             # Индикатор статуса API, GPIO2 - это встроенный синий светодиод на ESP12
+  led_status: GPIO16            # Индикатор статуса API, GPIO2 - это встроенный синий светодиод на ESP12
   led_indicator: GPIO13         # Дополнительный индикатор, который будет показывать режимы и прочее.
   detect_line: GPIO12           # Пин детектора вызова
   button_boot: GPIO0            # Кнопка управления платой и перевода в режим прошивки
   relay_line: GPIO14            # Пин "Переключение линии, плата/трубка"
-  switch_open: GPIO17            # Пин "Открытие двери"
+  switch_open: GPIO17           # Пин "Открытие двери"
   switch_phone: GPIO4           # Пин "Трубка положена/поднята"
 
 #input_select_mode_value
@@ -26,11 +26,11 @@ substitutions:
 
 #delay
   call_end_detect_delay: 4000ms     # Интервал между детектированием вызова
-# delay_before_answer: 1000ms       # Отпределили вызов, *** подождали ***... Передаем управление на плату,
+  delay_before_answer: "1000"       # (default) Отпределили вызов, *** подождали ***... Передаем управление на плату,
                                     # отключаем трубку, *** подождали *** ... воспроизводим аудио, если надо. (Number компонент before_answer)
   delay_before_open_door: 100ms     # Воспроизведение аудио закончилось, *** подождали *** ... нажимаем кнопку открытия двери.
-# delay_open_on_time: 600ms         # Кнопка открытия двери нажата, *** подождали *** ... отпустили кнопку. (Number компонент open_time)
-# delay_after_close_door: 2000ms    # Отпустили кнопку открытия двери, *** подождали *** ... Возвращаем управление на трубку (Number компонент after_close)
+  delay_open_on_time: "600"         # (default) Кнопка открытия двери нажата, *** подождали *** ... отпустили кнопку. (Number компонент open_time)
+  delay_after_close_door: "2000"    # (default) Отпустили кнопку открытия двери, *** подождали *** ... Возвращаем управление на трубку (Number компонент after_close)
   delay_no_answer: 30s              # Пауза для режима "Сброс если нет ответа" - сколько этот ответ плата ждёт
 
 #audio_support
@@ -92,7 +92,7 @@ esp32:
 
 esphome:
   name: ${dev_name}
-  comment: "Smartintercom ESP32"
+  comment: "Перед прошивкой проверь наличие настроек wifi_ssid и wifi_password в файле \"SECRETS\" - кнопка вверху справа"
   libraries:
     - SPI
     - FS
@@ -155,15 +155,15 @@ globals:
     restore_value: true
   - id: before_answer
     type: int
-    initial_value: '1000'
+    initial_value: $delay_before_answer
     restore_value: true
   - id: open_time
     type: int
-    initial_value: '600'
+    initial_value: $delay_open_on_time
     restore_value: true
   - id: after_close
     type: int
-    initial_value: '2000'
+    initial_value: $delay_after_close_door
     restore_value: true
 
 # MQTT и API вместе работать не могут. Выбери что надо.
@@ -495,7 +495,7 @@ number:
     mode: box
     unit_of_measurement: "мс"
     entity_category: "config"
-    initial_value: 1000
+    initial_value: $delay_before_answer
     min_value: 100
     max_value: 5000
     step: 100
@@ -510,7 +510,7 @@ number:
     mode: box
     unit_of_measurement: "мс"
     entity_category: "config"
-    initial_value: 600
+    initial_value: $delay_open_on_time
     min_value: 100
     max_value: 2000
     step: 50
@@ -525,7 +525,7 @@ number:
     mode: box
     unit_of_measurement: "мс"
     entity_category: "config"
-    initial_value: 2000
+    initial_value: $delay_after_close_door
     min_value: 100
     max_value: 5000
     step: 100
