@@ -320,13 +320,9 @@ script:
               condition:
                 lambda: 'return id(status_mute);'
               then:
-                if:
-                  condition:
-                    lambda: 'return id(status_leding);'
-                  then:
-                    light.turn_on:
-                      id: led_action
-                      effect: pulse
+                light.turn_on:
+                  id: led_action
+                  effect: pulse
           - if:
               condition:
                   lambda: 'return id(status_once_mode) > 0;'
