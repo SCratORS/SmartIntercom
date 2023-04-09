@@ -392,11 +392,6 @@ script:
               then:
                 - switch.turn_off: accept_call
                 - switch.turn_off: delivery
-          - if:
-              condition:
-                switch.is_on: reject_call
-              then:
-                switch.turn_off: reject_call
 
   # Reject incoming call
   - id: rejecting
@@ -436,12 +431,6 @@ script:
               then:
                 output.turn_on: phone_down
           - lambda: 'id(line_status).publish_state("${line_status_close}");'
-          - if:
-              condition:
-                switch.is_on: accept_call
-              then:
-                - switch.turn_off: accept_call
-                - switch.turn_off: delivery
           - if:
               condition:
                 switch.is_on: reject_call
