@@ -348,47 +348,7 @@ script:
                 light.turn_on:
                   id: led_action
                   effect: calling
-
-  # Up phone action 
-  - id: up_actions
-    then:
-      - output.turn_on: relay_switch_line
-      - output.turn_off: phone_down
-      - lambda: 'id(line_status).publish_state("${line_status_answer}");'
-      - delay: !lambda 'return id(before_answer);'
-  
-  # Open door action 
-  - id: open_actions
-    then:
-      - delay: $delay_before_open_door
-      - output.turn_on: open_door
-      - lambda: 'id(line_status).publish_state("${line_status_open}");'
-      - delay: !lambda 'return id(open_time);'
-      - output.turn_off: open_door
-  
-  # End call actions   
-  - id: down_actions
-    then:
-      - lambda: 'id(line_status).publish_state("${line_status_reject}");'
-      - delay: !lambda 'return id(after_close);'
-      - if:
-          condition:
-            lambda: 'return id(status_line);'
-          then:
-            output.turn_on: phone_down
-      - lambda: 'id(line_status).publish_state("${line_status_close}");'
-      - if:
-          condition:
-            switch.is_on: accept_call
-          then:
-            - switch.turn_off: accept_call
-            - switch.turn_off: delivery
-      - if:
-          condition:
-            switch.is_on: reject_call
-          then:
-            switch.turn_off: reject_call
-
+ 
   # Accept incoming call
   - id: accepting
     then:
@@ -396,7 +356,10 @@ script:
         condition:
           lambda: 'return id(status_line);'
         then:
-          - script.execute: up_actions
+          - output.turn_on: relay_switch_line
+          - output.turn_off: phone_down
+          - lambda: 'id(line_status).publish_state("${line_status_answer}");'
+          - delay: !lambda 'return id(before_answer);'
           - if:
               condition:
                 switch.is_on: delivery
@@ -410,8 +373,30 @@ script:
                     lambda: ${play_user_access_allowed};                   
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
-          - script.execute: open_actions
-          - script.execute: down_actions
+          - delay: $delay_before_open_door
+          - output.turn_on: open_door
+          - lambda: 'id(line_status).publish_state("${line_status_open}");'
+          - delay: !lambda 'return id(open_time);'
+          - output.turn_off: open_door
+          - lambda: 'id(line_status).publish_state("${line_status_reject}");'
+          - delay: !lambda 'return id(after_close);'
+          - if:
+              condition:
+                lambda: 'return id(status_line);'
+              then:
+                output.turn_on: phone_down
+          - lambda: 'id(line_status).publish_state("${line_status_close}");'
+          - if:
+              condition:
+                switch.is_on: accept_call
+              then:
+                - switch.turn_off: accept_call
+                - switch.turn_off: delivery
+          - if:
+              condition:
+                switch.is_on: reject_call
+              then:
+                switch.turn_off: reject_call
 
   # Reject incoming call
   - id: rejecting
@@ -420,7 +405,10 @@ script:
         condition:
           lambda: 'return id(status_line);'
         then:
-          - script.execute: up_actions
+          - output.turn_on: relay_switch_line
+          - output.turn_off: phone_down
+          - lambda: 'id(line_status).publish_state("${line_status_answer}");'
+          - delay: !lambda 'return id(before_answer);'
           - if:
               condition:
                 lambda: 'return id(status_sound);'
@@ -440,7 +428,25 @@ script:
                         lambda: ${play_user_no_answer};
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
-          - script.execute: down_actions
+          - lambda: 'id(line_status).publish_state("${line_status_reject}");'
+          - delay: !lambda 'return id(after_close);'
+          - if:
+              condition:
+                lambda: 'return id(status_line);'
+              then:
+                output.turn_on: phone_down
+          - lambda: 'id(line_status).publish_state("${line_status_close}");'
+          - if:
+              condition:
+                switch.is_on: accept_call
+              then:
+                - switch.turn_off: accept_call
+                - switch.turn_off: delivery
+          - if:
+              condition:
+                switch.is_on: reject_call
+              then:
+                switch.turn_off: reject_call
 
   # Reject no answer
   - id: rejecting_no_answer
