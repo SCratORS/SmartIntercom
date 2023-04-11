@@ -565,7 +565,7 @@ text_sensor:
     lambda: |-
       auto fs_info_sensor_ = new FSInfoSensor();
       App.register_component(fs_info_sensor_);
-      return {fs_info_sensor_->firmware_curent_version, fs_info_sensor_->fs_info_sensor};
+      return {fs_info_sensor_->firmware_current_version, fs_info_sensor_->fs_info_sensor};
     text_sensors:
       - name: ${dev_name}_firmware
         icon: "mdi:information"
