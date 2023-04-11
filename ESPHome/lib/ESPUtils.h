@@ -88,7 +88,7 @@ class FSInfoSensor : public PollingComponent, public TextSensor {
     public:
         FSInfoSensor() : PollingComponent(60000) {}
 
-        TextSensor *firmware_curent_version = new TextSensor();
+        TextSensor *firmware_current_version = new TextSensor();
         TextSensor *fs_info_sensor = new TextSensor();
 
         float get_setup_priority() const override { return esphome::setup_priority::AFTER_WIFI; }
@@ -96,10 +96,10 @@ class FSInfoSensor : public PollingComponent, public TextSensor {
         void setup() override {  
             this->mount_filesystem();
             #if defined(ESP8266)
-                if (aFS.exists(FIRMWARE_PATH)) firmware_curent_version->publish_state("Доступно обновление");
-                else firmware_curent_version->publish_state(FIRMWARE_VERSION);
+                if (aFS.exists(FIRMWARE_PATH)) firmware_current_version->publish_state("Доступно обновление");
+                else firmware_current_version->publish_state(FIRMWARE_VERSION);
             #else
-                firmware_curent_version->publish_state(FIRMWARE_VERSION);
+                firmware_current_version->publish_state(FIRMWARE_VERSION);
             #endif
         }
 
