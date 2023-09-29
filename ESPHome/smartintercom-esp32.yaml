@@ -55,7 +55,7 @@ esphome:
     - lib/ESPAudio.h
   platformio_options:
       board_build.filesystem: littlefs
-      board_build.partitions: ../../../partitions_esp32.csv 
+      board_build.partitions: ../../../config/esphome/partitions_esp32.csv
 #      build_flags: 
 #        - "-DSDCARD" # Поддержка SD карты    
   on_boot:
