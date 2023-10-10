@@ -15,7 +15,7 @@
 При использовании ESPHome воспроизведение mp3 файлов на платах ESP8266 невозможно из-за нехватки оперативной памяти МК, поэтому используем WAV (PCM 22кГц 16 Бит (signed) Моно).
 
 ## Хотите купить:
-Купить готовое устройство можно в https://smartintercom.ru
+Купить готовое устройство можно в https://shop.scrators.ru
 
 У Вас уже есть готовое и прошитое устройство, которое вы приобрели, и вы не знаете как начать с ним работать? - Почитайте [userguide.pdf](userguide.pdf)
 
@@ -62,9 +62,6 @@ https://github.com/SCratORS/SmartIntercom/issues/9
 
 Автоматическое отключение однократного открытия домофона:
 https://github.com/SCratORS/SmartIntercom/issues/8
-
-"Афтар! Чо так сложно?! А можно проще?" - Можно проще, идём сюда:
-https://wiki.smartintercom.ru/ru/home
 
 Схема устройсва и описание:
 https://oshwlab.com/scrators/intercom-v4b
