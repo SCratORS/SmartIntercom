@@ -1,20 +1,40 @@
-type: entities
-entities:
-  - entity: sensor.smartintercom_line_status
-    name: "Домофон"
-    secondary_info: last-changed
-  - entity: select.smartintercom_modes
-    name: "Режим работы"
-  - type: buttons
+type: vertical-stack
+cards:
+  - type: entities
     entities:
-      - entity: switch.smartintercom_accept_call
-        name: "Открыть"
-      - entity: switch.smartintercom_delivery
-        name: "Курьер"
-      - entity: switch.smartintercom_reject_call
-        name: "Сброс"
-      - entity: switch.smartintercom_sound
-      - entity: switch.smartintercom_mute
-      - entity: switch.smartintercom_led
-show_header_toggle: false
-state_color: false
+      - entity: sensor.smartintercom_line_status
+        name: Домофон
+        secondary_info: last-changed
+      - entity: select.smartintercom_modes
+        state_color: true
+        name: Режим работы
+  - type: horizontal-stack
+    cards:
+      - type: tile
+        entity: switch.smartintercom_accept_call
+        name: Открыть
+        hide_state: true
+        vertical: false
+        color: green
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: toggle
+      - type: tile
+        entity: switch.smartintercom_delivery
+        name: Курьер
+        hide_state: true
+        color: green
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: toggle
+      - type: tile
+        entity: switch.smartintercom_reject_call
+        name: Сброс
+        hide_state: true
+        color: red
+        tap_action:
+          action: toggle
+        icon_tap_action:
+          action: toggle
