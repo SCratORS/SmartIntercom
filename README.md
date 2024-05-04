@@ -63,8 +63,8 @@ https://github.com/SCratORS/SmartIntercom/issues/9
 Автоматическое отключение однократного открытия домофона:
 https://github.com/SCratORS/SmartIntercom/issues/8
 
-Схема устройсва и описание:
-https://oshwlab.com/scrators/intercom-v4b
+Электрическая схема и печатная плата актуальной версии:
+[https://oshwlab.com/scrators/smartintercom-nelma-ext-v1-1](https://oshwlab.com/scrators/smartintercom-nelma-ext-v1-1)
 
 Телеграм канал для обсуждения:
 https://t.me/smartintercom
