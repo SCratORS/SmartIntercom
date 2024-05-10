@@ -21,7 +21,7 @@
 #include "FTPServer.h"
 
 #define DEBUGf(format, ...) ESP_LOGD("FTP", format, ##__VA_ARGS__)
-#define FIRMWARE_VERSION "1.7.5"
+#define FIRMWARE_VERSION "1.7.6"
 
 #if defined(ESP8266)
     #define DEBUGs(format, ...) ESP_LOGD("UPDATER", format, ##__VA_ARGS__)
