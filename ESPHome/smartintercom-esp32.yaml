@@ -29,9 +29,11 @@ substitutions:
                                     # отключаем трубку, *** подождали *** ... воспроизводим аудио, если надо. (Number компонент before_answer)
   delay_before_open_door: 100ms     # Воспроизведение аудио закончилось, *** подождали *** ... нажимаем кнопку открытия двери.
   delay_open_on_time: "600"         # (default) Кнопка открытия двери нажата, *** подождали *** ... отпустили кнопку. (Number компонент open_time)
+  delay_after_close_greeting: "1000"  # (default) После открытия двери ждем пока закончится воспроизведение сигнала открытия двери на блоке вызова, чтобы не начать воспроизводить аудио в этот звук. (Number компонент delay_greeting)
   delay_after_close_door: "2000"    # (default) Отпустили кнопку открытия двери, *** подождали *** ... Возвращаем управление на трубку (Number компонент after_close)
 
 #audio_support
+  play_user_greeting: playFile(audio_player, "/user_greeting.mp3")
   play_user_access_allowed: playFile(audio_player, "/user_access_allowed.mp3")
   play_delivery_access_allowed: playFile(audio_player, "/delivery_access_allowed.mp3")
   play_access_denied: playFile(audio_player, "/access_denied.mp3")
@@ -41,7 +43,7 @@ esp32:
 
 esphome:
   name: ${dev_name}
-  comment: "Перед прошивкой проверь наличие настроек wifi_ssid и wifi_password в файле \"SECRETS\" - кнопка вверху справа"
+  comment: "SmartIntercom Nelma 4E"
   libraries:
     - SPI
     - FS
@@ -55,7 +57,7 @@ esphome:
     - lib/ESPAudio.h
   platformio_options:
       board_build.filesystem: littlefs
-      board_build.partitions: ../../../config/esphome/partitions_esp32.csv
+      board_build.partitions: ../../../config/esphome/partitions_esp32.csv 
 #      build_flags: 
 #        - "-DSDCARD" # Поддержка SD карты    
   on_boot:
@@ -69,6 +71,7 @@ logger:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
+#  use_address: 192.168.0.138
   ap:
 
 captive_portal:
@@ -100,6 +103,10 @@ globals:
   - id: status_sound
     type: bool
     initial_value: 'true'
+    restore_value: true
+  - id: status_greeting
+    type: bool
+    initial_value: 'false'
     restore_value: true
   - id: status_once_mode
     type: int
@@ -206,6 +213,11 @@ script:
             switch.turn_on: sound
       - if:
           condition:
+            lambda: 'return id(status_greeting);'
+          then:
+            switch.turn_on: greeting
+      - if:
+          condition:
             lambda: 'return id(status_mute);'
           then:
             switch.turn_on: mute
@@ -280,20 +292,32 @@ script:
           lambda: 'return id(status_line);'
         then:
           - output.turn_on: relay_switch_line
-          - output.turn_off: phone_down
+          - output.turn_on: phone_up
           - lambda: 'id(line_status).publish_state("${line_status_answer}");'
           - delay: !lambda "return id(delay_before_answer).state;"
           - if:
               condition:
-                switch.is_on: delivery
+                switch.is_on: greeting
               then:
-                lambda: ${play_delivery_access_allowed};
+                if:
+                  condition:
+                    or:
+                      - lambda: 'return id(status_sound);'
+                      - switch.is_on: delivery
+                  then:
+                    lambda: ${play_user_greeting};
               else:
                 if:
                   condition:
-                    lambda: 'return id(status_sound);'
+                    switch.is_on: delivery
                   then:
-                    lambda: ${play_user_access_allowed};                   
+                    lambda: ${play_delivery_access_allowed};
+                  else:
+                    if:
+                      condition:
+                        lambda: 'return id(status_sound);'
+                      then:
+                        lambda: ${play_user_access_allowed};                   
           - wait_until:
               lambda: 'return !isPlaying(audio_player);'
           - delay: $delay_before_open_door
@@ -301,9 +325,27 @@ script:
           - lambda: 'id(line_status).publish_state("${line_status_open}");'
           - delay: !lambda "return id(delay_open_time).state;"
           - output.turn_off: open_door
+          - if:
+              condition:
+                switch.is_on: greeting
+              then:
+                - delay: !lambda "return id(delay_greeting).state;"
+                - if:
+                    condition:
+                      switch.is_on: delivery
+                    then:
+                      lambda: ${play_delivery_access_allowed};
+                    else:
+                      if:
+                        condition:
+                          lambda: 'return id(status_sound);'
+                        then:
+                          lambda: ${play_user_access_allowed};
+                - wait_until:
+                    lambda: 'return !isPlaying(audio_player);'
           - lambda: 'id(line_status).publish_state("${line_status_reject}");'
           - delay: !lambda "return id(delay_after_close).state;"
-          - output.turn_on: phone_down
+          - output.turn_off: phone_up
           - lambda: 'id(line_status).publish_state("${line_status_close}");'
           - if:
               condition:
@@ -319,7 +361,7 @@ script:
           lambda: 'return id(status_line);'
         then:
           - output.turn_on: relay_switch_line
-          - output.turn_off: phone_down
+          - output.turn_on: phone_up
           - lambda: 'id(line_status).publish_state("${line_status_answer}");'
           - delay: !lambda "return id(delay_before_answer).state;"
           - if:
@@ -331,7 +373,7 @@ script:
                     lambda: 'return !isPlaying(audio_player);'
                 - delay: !lambda "return id(delay_open_time).state;"
           - lambda: 'id(line_status).publish_state("${line_status_reject}");'
-          - output.turn_on: phone_down
+          - output.turn_off: phone_up
           - lambda: 'id(line_status).publish_state("${line_status_close}");'
           - delay: !lambda "return id(delay_after_close).state;"
           - if:
@@ -408,6 +450,19 @@ number:
     min_value: 100
     max_value: 5000
     step: 100
+  - platform: template
+    name: ${dev_name}_greeting_delay
+    icon: "mdi:clock"
+    id: delay_greeting
+    optimistic: true
+    mode: box
+    unit_of_measurement: "мс"
+    entity_category: "config"
+    restore_value: true
+    initial_value: ${delay_after_close_greeting}
+    min_value: 100
+    max_value: 5000
+    step: 100
 
 select:
   - platform: template
@@ -477,7 +532,7 @@ binary_sensor:
           lambda: 'return id(status_line) == false;'
         then:
           - lambda: 'id(status_line) = true;'
-          - output.turn_on: phone_down
+          - output.turn_off: phone_up
           - script.wait: led_check
           - script.execute: led_check
           - logger.log: "Incoming call detected"
@@ -496,7 +551,7 @@ binary_sensor:
             output.turn_on: relay_switch_line
           else:
             output.turn_off: relay_switch_line
-      - output.turn_off: phone_down
+      - output.turn_off: phone_up
       - lambda: 'id(status_line) = false;'
       - logger.log: "Incoming call completed"
       - script.wait: led_check
@@ -545,10 +600,11 @@ output:
     number: $led_indicator
     mode: OUTPUT
 - platform: gpio
-  id: phone_down
+  id: phone_up
   pin:
     number: $switch_phone
     mode: OUTPUT
+    inverted: true
 
 button:
   - platform: restart
@@ -753,3 +809,20 @@ switch:
           id: sound
           state: false
       - lambda: 'id(status_sound) = false;'
+
+  - platform: template
+    name: ${dev_name}_greeting
+    id: greeting
+    icon: "mdi:hand-wave"
+    entity_category: "config"
+    restore_mode: DISABLED
+    turn_on_action:
+      - switch.template.publish:
+          id: greeting
+          state: true
+      - lambda: 'id(status_greeting) = true;'
+    turn_off_action:
+      - switch.template.publish:
+          id: greeting
+          state: false
+      - lambda: 'id(status_greeting) = false;'
