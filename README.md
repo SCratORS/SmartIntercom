@@ -1,6 +1,6 @@
 # SmartIntercom
 
-![](images/main.jpg)
+![](https://github.com/SCratORS/SmartIntercom/blob/main/images/DSC_0227.JPG)
 
 Умный домофон на ESP
 
