@@ -29,7 +29,7 @@
 5. Скопировать mp3 файлы из [data](https://github.com/SCratORS/SmartIntercom/tree/main/data) в корень FTP.
 
 ### Если ничего не прошито, голая прошивка / аварийная перепрошивка:
-Используя какой-нибудь USB-TTL программатор и далее с помощью ESP Download Tools для прошивки ESP32, подробнее см. (Перепрошивка устройства)[https://github.com/SCratORS/SmartIntercom/wiki/%D0%9F%D0%B5%D1%80%D0%B5%D0%BF%D1%80%D0%BE%D1%88%D0%B8%D0%B2%D0%BA%D0%B0-%D1%83%D1%81%D1%82%D1%80%D0%BE%D0%B9%D1%81%D1%82%D0%B2%D0%B0]:
+Используя какой-нибудь USB-TTL программатор и далее с помощью ESP Download Tools для прошивки ESP32, подробнее см. [Перепрошивка устройства](https://github.com/SCratORS/SmartIntercom/wiki/%D0%9F%D0%B5%D1%80%D0%B5%D0%BF%D1%80%D0%BE%D1%88%D0%B8%D0%B2%D0%BA%D0%B0-%D1%83%D1%81%D1%82%D1%80%D0%BE%D0%B9%D1%81%D1%82%D0%B2%D0%B0):
 1. Основной файл прошивки [ESP32_smartintercom.bin](bin/ESP32_smartintercom.bin) - Прошивать в адрес 0x0
 2. Аудиофайлы в виде образа LittleFS [ESP32_mklittlefs_0x2B0000.bin](bin/ESP32_mklittlefs_0x2B0000.bin) - Прошивать в адрес 0x2B0000
 
