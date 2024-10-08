@@ -59,7 +59,7 @@ https://github.com/SCratORS/SmartIntercom/issues/9
 Автоматическое отключение однократного открытия домофона:
 https://github.com/SCratORS/SmartIntercom/issues/8
 
-Электрическая схема и печатная плата актуальной версии для самостоятельного производства:
+Электрическая схема и печатная плата актуальной версии для самостоятельного производства (толщина текстолита используется 1.2мм - иначе в корпусе будет щель):
 [https://oshwlab.com/scrators/smartintercom-nelma-ext-v1-1](https://oshwlab.com/scrators/smartintercom-nelma-ext-v1-1)
 
 Телеграм канал для обсуждения:
