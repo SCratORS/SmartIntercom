@@ -1,6 +1,6 @@
 # SmartIntercom
 <p align="center" width="100%">
-    <img width="100%" src="https://github.com/user-attachments/assets/59aa2876-1425-4c87-8bc4-caba99be8e40"> 
+    <img width="100%" src="https://github.com/user-attachments/assets/3a0c55de-07b2-4b87-9379-20e4fee1e5f3"> 
 </p>
 
 ## Хотите купить:
