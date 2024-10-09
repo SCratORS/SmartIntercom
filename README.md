@@ -1,7 +1,7 @@
 # SmartIntercom
-
-![PXL_20240906_042251240](https://github.com/user-attachments/assets/462e4b98-31d7-40f4-89bc-09903cee4d0d)
-
+<p align="center" width="100%">
+    <img width="33%" src="https://github.com/user-attachments/assets/462e4b98-31d7-40f4-89bc-09903cee4d0d"> 
+</p>
 Умный домофон на ESP
 
 (Устройство удаленного управления абонентской линией координатных домофонных систем)
