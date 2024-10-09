@@ -1,10 +1,7 @@
 # SmartIntercom
 <p align="center" width="100%">
-    <img width="33%" src="https://github.com/user-attachments/assets/462e4b98-31d7-40f4-89bc-09903cee4d0d"> 
+    <img width="100%" src="https://github.com/user-attachments/assets/59aa2876-1425-4c87-8bc4-caba99be8e40"> 
 </p>
-Умный домофон на ESP
-
-(Устройство удаленного управления абонентской линией координатных домофонных систем)
 
 ## Хотите купить:
 Купить готовое устройство можно в https://shop.scrators.ru
