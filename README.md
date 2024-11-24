@@ -3,7 +3,7 @@
     <img width="100%" src="https://github.com/user-attachments/assets/3a0c55de-07b2-4b87-9379-20e4fee1e5f3"> 
 </p>
 
-### P.S. Для цифровых домофонных систем данная прошивка тоже подходит, но только прошивка. Само устройство нужно другое.
+### P.S. Для устройств собраных на базе [Smart модуль для Laskomex LM-8D](https://shop.scrators.ru/index.php?route=product/product&language=ru-ru&product_id=56&path=61) тоже подходит.
 
 
 ## Хотите купить:
