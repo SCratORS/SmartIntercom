@@ -129,6 +129,7 @@ api:
 
 # Возможность обновляться по воздуху
 ota:
+  platform: esphome
   password: "12345678"
   
 custom_component:
