@@ -1,0 +1,253 @@
+{
+   "name": "Домофон",
+   "manufacturer": "SCHome",
+   "model": "Smartintercom Nelma ESPHome",
+   "services": [{
+         "name": "Звонок",
+         "type": "Doorbell",
+         "characteristics": [{
+               "type": "ProgrammableSwitchEvent",
+               "link": {
+                  "type": "String",
+                  "topicSearch": "(.*)/select/smartintercom_modes/state",
+                  "topicGet": "(1)/binary_sensor/smartintercom_line_detect/state",
+                  "map": {
+                     "0": "ON"
+                  }
+               },
+               "validValues": "0"
+            },
+            {
+               "type": "Mute",
+               "link": {
+                  "type": "String",
+                  "topicGet": "(1)/switch/smartintercom_mute/state",
+                  "topicSet": "(1)/switch/smartintercom_mute/command",
+                  "map": {
+                     "false": "OFF",
+                     "true": "ON"
+                  }
+               }
+            },
+            {
+               "type": "Brightness",
+               "link": {
+                  "type": "String",
+                  "topicGet": "(1)/switch/smartintercom_led/state",
+                  "topicSet": "(1)/switch/smartintercom_led/command",
+                  "map": {
+                     "0": "OFF",
+                     "100": "ON"
+                  }
+               },
+               "value": 100,
+               "minValue": 0,
+               "maxValue": 100,
+               "minStep": 100
+            }
+         ]
+      },
+      {
+         "name": "Автооткрытие",
+         "type": "Switch",
+         "characteristics": [{
+            "type": "On",
+            "link": {
+               "type": "String",
+               "topicGet": "(1)/select/smartintercom_modes/state",
+               "topicSet": "(1)/select/smartintercom_modes/command",
+               "map": {
+                  "false": "Не активен;Сброс вызова",
+                  "true": "Открывать всегда"
+               }
+            }
+         }]
+      },
+      {
+         "name": "Автосброс",
+         "type": "Switch",
+         "characteristics": [{
+            "type": "On",
+            "link": {
+               "type": "String",
+               "topicGet": "(1)/select/smartintercom_modes/state",
+               "topicSet": "(1)/select/smartintercom_modes/command",
+               "map": {
+                  "false": "Не активен;Открывать всегда",
+                  "true": "Сброс вызова"
+               }
+            }
+         }]
+      },
+      {
+         "name": "Жду курьера",
+         "type": "Switch",
+         "characteristics": [{
+            "type": "On",
+            "link": {
+               "type": "String",
+               "topicGet": "(1)/switch/smartintercom_delivery/state",
+               "topicSet": "(1)/switch/smartintercom_delivery/command",
+               "map": {
+                  "false": "OFF",
+                  "true": "ON"
+               }
+            }
+         }]
+      },
+      {
+         "name": "Открыть однократно",
+         "type": "Switch",
+         "characteristics": [{
+            "type": "On",
+            "link": {
+               "type": "String",
+               "topicGet": "(1)/switch/smartintercom_accept_call/state",
+               "topicSet": "(1)/switch/smartintercom_accept_call/command",
+               "map": {
+                  "false": "OFF",
+                  "true": "ON"
+               }
+            }
+         }]
+      },
+      {
+         "name": "Отклонить однократно",
+         "type": "Switch",
+         "characteristics": [{
+            "type": "On",
+            "link": {
+               "type": "String",
+               "topicGet": "(1)/switch/smartintercom_reject_call/state",
+               "topicSet": "(1)/switch/smartintercom_reject_call/command",
+               "map": {
+                  "false": "OFF",
+                  "true": "ON"
+               }
+            }
+         }]
+      }
+   ],
+   "options": [{
+         "link": {
+            "type": "String",
+            "topicGet": "(1)/switch/smartintercom_sound/state",
+            "topicSet": "(1)/switch/smartintercom_sound/command",
+            "map": {
+               "false": "OFF",
+               "true": "ON"
+            }
+         },
+         "name": "Воспроизведение аудиосообщений",
+         "description": "Воспроизведение аудиосообщений на блок вызова",
+         "type": "Boolean",
+         "value": true
+      },
+	  {
+         "link": {
+            "type": "String",
+            "topicGet": "(1)/switch/smartintercom_greeting/state",
+            "topicSet": "(1)/switch/smartintercom_greeting/command",
+            "map": {
+               "false": "OFF",
+               "true": "ON"
+            }
+         },
+         "name": "Звуковое приветствие",
+         "description": "Воспроизведение аудиоприветствия на блок вызова",
+         "type": "Boolean",
+         "value": true
+      },
+      {
+         "link": {
+            "type": "String",
+            "topicGet": "(1)/switch/smartintercom_phone_disable/state",
+            "topicSet": "(1)/switch/smartintercom_phone_disable/command",
+            "map": {
+               "false": "OFF",
+               "true": "ON"
+            }
+         },
+         "name": "Режим без трубки",
+         "description": "Режим отключения трубки, плата не передает сигнал с линии на трубку",
+         "type": "Boolean",
+         "value": false
+      },
+      {
+         "link": {
+            "type": "String",
+            "topicGet": "(1)/number/smartintercom_before_answer/state",
+            "topicSet": "(1)/number/smartintercom_before_answer/command"
+         },
+         "name": "Время ожидания перед поднятием трубки (мс)",
+         "type": "Integer",
+         "description": "Delay Before Answer - Сколько времени в миллисекундах нужно ждать, перед тем как поднять трубку",
+         "value": 1000,
+         "minValue": 100,
+         "maxValue": 5000
+      },
+      {
+         "link": {
+            "type": "String",
+            "topicGet": "(1)/number/smartintercom_open_time/state",
+            "topicSet": "(1)/number/smartintercom_open_time/command"
+         },
+         "name": "Время нажатия кнопки (мс)",
+         "type": "Integer",
+         "description": "Open Time - Сколько времени в миллисекундах держать кнопку нажатой",
+         "value": 600,
+         "minValue": 100,
+         "maxValue": 2000
+      },
+	  {
+         "link": {
+            "type": "String",
+            "topicGet": "(1)/number/smartintercom_greeting_delay/state",
+            "topicSet": "(1)/number/smartintercom_greeting_delay/command"
+         },
+         "name": "Задержка воспроизведения звукового приветствия (мс)",
+         "type": "Integer",
+         "description": "Delay Before Greeting - Сколько времени в миллисекундах ждать пока закончится воспроизведение сигнала открытия двери на блоке вызова и начнётся воспроизведение аудиоприветсвия",
+         "value": 1000,
+         "minValue": 100,
+         "maxValue": 5000
+      },
+      {
+         "link": {
+            "type": "String",
+            "topicGet": "(1)/number/smartintercom_after_close/state",
+            "topicSet": "(1)/number/smartintercom_after_close/command"
+         },
+         "name": "Задержка поднятой трубки после нажатия кнопки (мс)",
+         "type": "Integer",
+         "description": "Delay After Close - Сколько времени в миллисекундах держать трубку поднятой перед сбросом звонка",
+         "value": 2000,
+         "minValue": 100,
+         "maxValue": 5000
+      },
+      {
+         "link": {
+            "type": "String",
+            "topicGet": "(1)/sensor/smartintercom_firmware/state"
+         },
+         "name": "Версия прошивки",
+         "type": "String"
+      },
+      {
+         "link": {
+            "type": "String",
+            "topicGet": "(1)/sensor/smartintercom_mac/state"
+         },
+         "name": "MAC-адрес",
+         "type": "String"
+      },
+      {
+         "link": {
+            "type": "String",
+            "topicGet": "(1)/sensor/smartintercom_ip/state"
+         },
+         "name": "IP-адрес",
+         "type": "String"
+      }
+   ]
+}
