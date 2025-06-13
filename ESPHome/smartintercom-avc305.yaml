@@ -168,7 +168,11 @@ api:
 # Возможность обновляться по воздуху
 ota:
   password: "12345678"
-  
+
+external_components: # fix for removal of custom component in esphome 2025.xx and up
+  - source: github://esphome/esphome@2024.12.4
+    components: [ custom, custom_component ]
+
 custom_component:
   - id: ftp_server
     lambda: 'return {new FTPSrv("","")};' # (Логин, Пароль). По умолчанию anonymous  
