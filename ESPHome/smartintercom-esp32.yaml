@@ -24,7 +24,7 @@ substitutions:
   line_status_close:  "Закрыто"
 
 #delay
-  call_end_detect_delay: 4000ms     # Интервал между детектированием вызова
+  call_end_detect_delay: "4000"     # (default) Интервал между детектированием вызова
   delay_before_answer: "1000"       # (default) Отпределили вызов, *** подождали ***... Передаем управление на плату,
                                     # отключаем трубку, *** подождали *** ... воспроизводим аудио, если надо. (Number компонент before_answer)
   delay_before_open_door: 100ms     # Воспроизведение аудио закончилось, *** подождали *** ... нажимаем кнопку открытия двери.
@@ -135,7 +135,7 @@ ota:
 external_components: # fix for removal of custom component in esphome 2025.xx and up
   - source: github://esphome/esphome@2024.12.4
     components: [ custom, custom_component ]
-    
+
 custom_component:
   - id: ftp_server
     lambda: 'return {new FTPSrv("","")};' # (Логин, Пароль). По умолчанию anonymous  
@@ -417,6 +417,19 @@ script:
 
 number:
   - platform: template
+    name: ${dev_name}_call_end_delay
+    icon: "mdi:clock"
+    id: call_end_delay
+    optimistic: true
+    mode: box
+    unit_of_measurement: "мс"
+    entity_category: "config"
+    restore_value: true
+    initial_value: ${call_end_detect_delay}
+    min_value: 1000
+    max_value: 10000
+    step: 100
+  - platform: template
     name: ${dev_name}_before_answer
     icon: "mdi:clock"
     id: delay_before_answer
@@ -530,7 +543,7 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: True
     filters:
-      - delayed_off: ${call_end_detect_delay}
+      - delayed_off: !lambda "return id(call_end_delay).state;"
     on_press:
       if:
         condition:
