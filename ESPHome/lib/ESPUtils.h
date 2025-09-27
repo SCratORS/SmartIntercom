@@ -15,13 +15,13 @@
 #else
     #include "LittleFS.h"
     #define aFS LittleFS
-    #define CRITICAL_FREE 300000
+    #define CRITICAL_FREE 16384
 #endif
 
 #include "FTPServer.h"
 
 #define DEBUGf(format, ...) ESP_LOGD("FTP", format, ##__VA_ARGS__)
-#define FIRMWARE_VERSION "1.7.6"
+#define FIRMWARE_VERSION "1.7.7"
 
 #if defined(ESP8266)
     #define DEBUGs(format, ...) ESP_LOGD("UPDATER", format, ##__VA_ARGS__)
@@ -109,7 +109,7 @@ class FSInfoSensor : public PollingComponent, public TextSensor {
                 double base = log(max(this->get_fs_used() - CRITICAL_FREE, (int64_t) 0)) / log(1024);
                 uint8_t b_hi = round(base);
                 sprintf(str, "%.2f %s", pow(1024, base - b_hi), this->sizes[b_hi]);
-                fs_info_sensor->publish_state(to_string(str));
+                fs_info_sensor->publish_state(str);
             } else fs_info_sensor->publish_state("Ошибка");
         }
 
