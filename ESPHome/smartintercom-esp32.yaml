@@ -7,7 +7,7 @@ substitutions:
   led_indicator: GPIO13         # Дополнительный индикатор, который будет показывать режимы и прочее.
   detect_line: GPIO12           # Пин детектора вызова
   button_boot: GPIO0            # Кнопка управления платой и перевода в режим прошивки
-  relay_line: GPIO14            # Пин "Переключение линии, плата/трубка"
+  relay_line: GPIO14            # Пин "Отключения динамика"
   switch_open: GPIO17           # Пин "Открытие двери"
   switch_phone: GPIO4           # Пин "Трубка положена/поднята"
 
@@ -24,7 +24,7 @@ substitutions:
   line_status_close:  "Закрыто"
 
 #delay
-  call_end_detect_delay: 4000ms     # Интервал между детектированием вызова
+  call_end_detect_delay: "4000"     # Интервал между детектированием вызова
   delay_before_answer: "1000"       # (default) Отпределили вызов, *** подождали ***... Передаем управление на плату,
                                     # отключаем трубку, *** подождали *** ... воспроизводим аудио, если надо. (Number компонент before_answer)
   delay_before_open_door: 100ms     # Воспроизведение аудио закончилось, *** подождали *** ... нажимаем кнопку открытия двери.
@@ -37,8 +37,6 @@ substitutions:
   play_user_access_allowed: playFile(audio_player, "/user_access_allowed.mp3")
   play_delivery_access_allowed: playFile(audio_player, "/delivery_access_allowed.mp3")
   play_access_denied: playFile(audio_player, "/access_denied.mp3")
-  play_ringtone: playFile(audio_player, "/ringtone.mp3")
-  audio_stop: stopFile(audio_player)
 
 esp32:
   board: ${base}
@@ -112,10 +110,6 @@ globals:
     type: int
     initial_value: '0'
     restore_value: true
-  - id: phone_up_status
-    type: bool
-    initial_value: 'false'
-    restore_value: false
 
 # MQTT и API вместе работать не могут. Выбери что надо.
 # +---------------------------------------------+
@@ -136,10 +130,8 @@ ota:
   platform: esphome
   password: "12345678"
 
-external_components:
-  - source:
-      type: git
-      url: https://github.com/robertklep/esphome-custom-component
+external_components: # fix for removal of custom component in esphome 2025.xx and up
+  - source: github://esphome/esphome@2024.12.4
     components: [ custom, custom_component ]
     
 custom_component:
@@ -302,8 +294,6 @@ script:
         condition:
           lambda: 'return id(status_line);'
         then:
-          - lambda: 'id(phone_up_status) = true;'
-          - lambda: ${audio_stop};
           - output.turn_on: relay_switch_line
           - output.turn_on: phone_up
           - lambda: 'id(line_status).publish_state("${line_status_answer}");'
@@ -359,7 +349,6 @@ script:
           - lambda: 'id(line_status).publish_state("${line_status_reject}");'
           - delay: !lambda "return id(delay_after_close).state;"
           - output.turn_off: phone_up
-          - lambda: 'id(phone_up_status) = false;'
           - lambda: 'id(line_status).publish_state("${line_status_close}");'
           - if:
               condition:
@@ -374,8 +363,6 @@ script:
         condition:
           lambda: 'return id(status_line);'
         then:
-          - lambda: 'id(phone_up_status) = true;'
-          - lambda: ${audio_stop};
           - output.turn_on: relay_switch_line
           - output.turn_on: phone_up
           - lambda: 'id(line_status).publish_state("${line_status_answer}");'
@@ -390,7 +377,6 @@ script:
                 - delay: !lambda "return id(delay_open_time).state;"
           - lambda: 'id(line_status).publish_state("${line_status_reject}");'
           - output.turn_off: phone_up
-          - lambda: 'id(phone_up_status) = false;'
           - lambda: 'id(line_status).publish_state("${line_status_close}");'
           - delay: !lambda "return id(delay_after_close).state;"
           - if:
@@ -398,17 +384,6 @@ script:
                 switch.is_on: reject_call
               then:
                 switch.turn_off: reject_call
-
-  - id: ringtone
-    then:
-      while:
-        condition:
-          lambda: 'return id(status_line) && (id(phone_up_status) == false);'
-        then:
-          - lambda: ${play_ringtone};
-          - wait_until:
-              lambda: 'return !isPlaying(audio_player);'
-
 
   - id: state_call
     then:
@@ -439,6 +414,19 @@ script:
                       lambda: 'id(line_status).publish_state("${line_status_close}");'
 
 number:
+  - platform: template
+    name: ${dev_name}_call_end_delay
+    icon: "mdi:clock"
+    id: call_end_delay
+    optimistic: true
+    mode: box
+    unit_of_measurement: "мс"
+    entity_category: "config"
+    restore_value: true
+    initial_value: ${call_end_detect_delay}
+    min_value: 1000
+    max_value: 10000
+    step: 100
   - platform: template
     name: ${dev_name}_before_answer
     icon: "mdi:clock"
@@ -553,7 +541,7 @@ binary_sensor:
       mode: INPUT_PULLUP
       inverted: True
     filters:
-      - delayed_off: ${call_end_detect_delay}
+      - delayed_off: !lambda "return id(call_end_delay).state;"
     on_press:
       if:
         condition:
@@ -561,8 +549,6 @@ binary_sensor:
         then:
           - lambda: 'id(status_line) = true;'
           - output.turn_off: phone_up
-          - lambda: 'id(phone_up_status) = false;'
-          - script.execute: ringtone
           - script.wait: led_check
           - script.execute: led_check
           - logger.log: "Incoming call detected"
@@ -582,7 +568,6 @@ binary_sensor:
           else:
             output.turn_off: relay_switch_line
       - output.turn_off: phone_up
-      - lambda: 'id(phone_up_status) = false;'
       - lambda: 'id(status_line) = false;'
       - logger.log: "Incoming call completed"
       - script.wait: led_check
@@ -596,7 +581,7 @@ binary_sensor:
         }   
       
   - platform: gpio
-    id: ${dev_name}_button
+    id: button_boot
     pin:
       number: $button_boot
       mode: INPUT_PULLUP
@@ -635,7 +620,7 @@ output:
   pin:
     number: $switch_phone
     mode: OUTPUT
-    inverted: false
+    inverted: true
 
 button:
   - platform: restart
@@ -775,7 +760,7 @@ switch:
       - lambda: 'id(status_mute) = false;'
       - script.wait: led_check
       - script.execute: led_check
-              
+
   - platform: template
     name: ${dev_name}_phone_disable
     id: phone_disable
@@ -802,7 +787,7 @@ switch:
             lambda: 'return id(status_line) == false;'
           then:
             output.turn_off: relay_switch_line  
-          
+
   - platform: template
     name: ${dev_name}_led
     id: led
